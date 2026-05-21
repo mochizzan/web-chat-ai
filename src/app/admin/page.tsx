@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bot, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -39,12 +39,12 @@ export default function AdminPage() {
   const [userSearchQuery, setUserSearchQuery] = useState('');
 
   // Fetch models on mount
-  useState(() => {
+  useEffect(() => {
     fetchModels(true);
-  });
+  }, [fetchModels]);
 
   // Fetch users when needed
-  useState(() => {
+  useEffect(() => {
     async function loadUsers() {
       try {
         const data = await fetchUsers(usersPage, usersLimit, userSearchQuery);
@@ -55,7 +55,7 @@ export default function AdminPage() {
       }
     }
     loadUsers();
-  });
+  }, [usersPage, usersLimit, userSearchQuery, fetchUsers]);
 
   const handlePullModels = async () => {
     await syncModels();
