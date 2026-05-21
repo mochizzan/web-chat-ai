@@ -19,12 +19,13 @@ import {
 // Custom Hooks for extracted logic
 import { useChatStream } from '@/hooks/useChatStream';
 import { useChatActions } from '@/hooks/useChatActions';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import { ChatContainer } from '@/components/chat/chat-container';
 import { StreamingIndicator } from '@/components/chat/streaming-indicator';
 
 export default function Home() {
-  // 1. AuthSession
-  // const { isLoadingConversations } = useAuthSession(); // Removed unused variable
+  // 1. AuthSession - Load user session and conversations from server
+  useAuthSession();
 
   // 2. ChatStream and chat operations from hook
   const { handleSend, handleStop } = useChatStream();

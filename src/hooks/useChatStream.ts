@@ -592,7 +592,7 @@ export function useChatStream() {
           const contentType = res.headers.get('content-type') || '';
           let serverError = '';
           try {
-            if (contentType.includes('application/json')) {
+            if (contentType && contentType.includes('application/json')) {
               const errorData = await res.json();
               serverError = errorData.error || '';
             } else {
@@ -603,19 +603,19 @@ export function useChatStream() {
             serverError = `Server error (${res.status})`;
           }
 
-          if (res.status === 402 || serverError.includes('credit')) {
+          if (res.status === 402 || (serverError && serverError.includes('credit'))) {
             toast({
               title: 'Kredit Habis',
               description: 'Kredit Anda sudah habis. Silakan reset di pengaturan akun.',
               variant: 'destructive',
             });
-          } else if (res.status === 504 || serverError.includes('timeout')) {
+          } else if (res.status === 504 || (serverError && serverError.includes('timeout'))) {
             toast({
               title: 'Timeout',
               description: 'AI membutuhkan waktu terlalu lama. Coba pesan yang lebih pendek.',
               variant: 'destructive',
             });
-          } else if (res.status === 503 || serverError.includes('koneksi')) {
+          } else if (res.status === 503 || (serverError && serverError.includes('koneksi'))) {
             toast({
               title: 'Koneksi Gagal',
               description: 'Tidak dapat terhubung ke AI. Periksa koneksi dan coba lagi.',
@@ -633,7 +633,7 @@ export function useChatStream() {
         }
 
         const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('text/event-stream')) {
+        if (contentType && contentType.includes('text/event-stream')) {
           console.log(`[${new Date().toISOString()}] [useChatStream] handleSend: Processing SSE stream`);
           await processSSEStream(res, tempId, message);
         } else {
