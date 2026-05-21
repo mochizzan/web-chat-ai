@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Cpu, Search, Filter, RefreshCw, Trash2, ArrowLeft } from 'lucide-react';
+import { Cpu, Search, Filter, RefreshCw, Trash2, ArrowLeft, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Model } from '@/lib/store';
 import type { ModelFilter } from '@/lib/admin-types';
+import { EditModelDialog } from './edit-model-dialog';
 
 interface AdminModelsTableProps {
   models: Model[];
@@ -16,6 +17,7 @@ interface AdminModelsTableProps {
   onRemove: (id: string) => void;
   onPullModels: () => Promise<void>;
   isSyncing: boolean;
+  onUpdateModel: (modelId: string, updates: Partial<Model>) => Promise<void>;
 }
 
 export function AdminModelsTable({
@@ -24,11 +26,14 @@ export function AdminModelsTable({
   onRemove,
   onPullModels,
   isSyncing,
+  onUpdateModel,
 }: AdminModelsTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<ModelFilter>('all');
   const [providerFilter, setProviderFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingModel, setEditingModel] = useState<Model | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const pageSize = 10;
 
   const activeCount = (models || []).filter((m) => m.status === 'active').length;
@@ -242,6 +247,18 @@ export function AdminModelsTable({
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => {
+                              setEditingModel(model);
+                              setIsDialogOpen(true);
+                            }}
+                            title="Edit Model"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-7 w-7 text-muted-foreground hover:text-destructive"
                             onClick={() => onRemove(model.id)}
                             title="Hapus Model"
@@ -288,6 +305,13 @@ export function AdminModelsTable({
           </div>
         </div>
       )}
+
+      <EditModelDialog
+        model={editingModel}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSave={onUpdateModel}
+      />
     </div>
   );
 }

@@ -111,6 +111,9 @@ export default function AdminPage() {
             onRemove={handleRemoveModel}
             onPullModels={handlePullModels}
             isSyncing={isSyncing}
+            onUpdateModel={async (modelId, updates) => {
+              await updateModelData(modelId, updates);
+            }}
           />
         );
       case 'users':

@@ -1,186 +1,58 @@
 ```gitignore
 # Dependencies
 node_modules/
+.pnpm-store/
+.yarn/
+.yarn-cache/
 
 # Build outputs
 dist/
 build/
 .next/
+.nuxt/
 out/
+public/build/
+
+# TypeScript/JavaScript
+*.tsbuildinfo
+*.js.map
+*.jsx.map
+*.tsx.map
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Environment variables
 .env
 .env.local
-*.env.*
+.env.*
+!.env.example
 
-# Python specific
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.ENV
-
-# Logs
-*.log
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# IDE specific
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# Coverage reports
+# Coverage
 coverage/
-htmlcov/
-.coverage
-
-# Testing
-.mypy_cache/
-.pytest_cache/
 .nyc_output/
-coverage/lcov.info
+istanbul/
+.jest/
 
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Translations
-*.mo
-*.pot
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pip
-pip-log.txt
-pip-delete-this-directory.txt
-
-# PEP 582
-__pypackages__/
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# Sage
-.hg/
-.svn/
-.git/
-
-# Compressed files
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.gz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-
-# Go specific
-*.out
-*.a
-*.o
-
-# Java specific
-*.class
-*.jar
-*.war
-*.ear
-target/
-.gradle/
-!gradle-wrapper.properties
-
-# C/C++ specific
-*.so
-*.dll
-*.dylib
-*.exe
-*.obj
-*.a
-
-# Rust specific
-Cargo.lock
-target/
-
-# Node specific
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Bower
-bower_components/
-
-# Composer
-vendor/
-
-# Webpack
-webpack-stats.json
-
-# Phoenix
-erl_crash.dump
-
-# Nim
-*.nimble
-*.nim.cfg
-
-# Julia
-.julia/
-
-# Zig
-zig-cache/
-zig-out/
-
-# Terraform
-*.tfstate
-*.tfstate.backup
-.terraform/
-
-# Ansible
-.retry
-
-# Vagrant
-.vagrant/
-
-# Docker
-.dockerenv
-
-# Temporary folders
-tmp/
-temp/
+# Temporary files
+*.tmp
+*.temp
+.DS_Store?
 ```
+
+Wait, let me reconsider. The changes are only TypeScript/JSX source files (.tsx), which shouldn't be ignored. No build artifacts, dependencies, or temporary files are shown in the changes. The current .gitignore appears to be empty.
+
+(empty — output nothing)
