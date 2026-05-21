@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import gsap from 'gsap';
-import { Menu, PanelLeft, MessageSquare, Activity, Coins, Receipt, ArrowDownToLine, ArrowUpFromLine, Globe } from 'lucide-react';
+import { Menu, PanelLeft, MessageSquare, Activity, Coins, Receipt, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/tooltip';
 import { ModelSelector } from './model-selector';
 import { MarqueeText } from '@/components/ui/marquee-text';
-import { Switch } from '@/components/ui/switch';
 import { useChatStore } from '@/lib/store';
 import { useMounted } from '@/hooks/use-mounted';
 
@@ -60,7 +59,7 @@ function safeNum(n: number): number {
 }
 
 export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) {
-  const { activeCategory, activeConversationId, conversations, sidebarOpen, usageLogs, messages, webSearchEnabled, setWebSearchEnabled } =
+  const { activeCategory, activeConversationId, conversations, sidebarOpen, usageLogs, messages } =
     useChatStore();
   const mounted = useMounted();
   const barRef = useRef<HTMLDivElement>(null);
@@ -152,29 +151,8 @@ export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) 
         <ModelSelector />
       </div>
 
-      {/* Right: session stats + web search + badge (shrink-0) */}
+      {/* Right: session stats + badge (shrink-0) */}
       <div className="flex items-center gap-1.5 shrink-0 ml-2">
-        {/* Web Search Toggle — always visible */}
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 rounded-lg border border-border/30 bg-card/60 px-2 py-1 cursor-default select-none">
-                <Globe className={`h-3 w-3 ${webSearchEnabled ? 'text-sky-500' : 'text-muted-foreground/50'}`} />
-                <span className={`text-[10px] font-medium leading-none ${webSearchEnabled ? 'text-sky-600 dark:text-sky-400' : 'text-muted-foreground'}`}>Web</span>
-                <Switch
-                  checked={webSearchEnabled}
-                  onCheckedChange={setWebSearchEnabled}
-                  className="h-3.5 w-6 [&>span]:h-[10px] [&>span]:w-[10px]"
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-[11px] bg-popover text-popover-foreground border border-border/40 shadow-md p-2 max-w-[180px]">
-              <p className="font-semibold">Web Search</p>
-              <p className="text-muted-foreground">AI akan mencari informasi terbaru dari internet untuk respons yang lebih akurat</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
         {/* Session stats — only when chat has started */}
         {hasChatStarted && mounted && (
           <TooltipProvider delayDuration={300}>

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Ban, Lightbulb, LightbulbOff } from 'lucide-react';
+import { AlertTriangle, Ban, Lightbulb, LightbulbOff, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
@@ -22,6 +22,8 @@ export function ChatInput({ onSend, onStop, initialMessage }: ChatInputProps) {
     isGenerating,
     setThinkingEnabled,
     thinkingEnabled,
+    webSearchEnabled,
+    setWebSearchEnabled,
     models,
   } = useChatStore();
 
@@ -162,6 +164,25 @@ export function ChatInput({ onSend, onStop, initialMessage }: ChatInputProps) {
               </span>
             </button>
           )}
+
+          {/* Web Search toggle - always visible */}
+          <button
+            onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 transition-all ${
+              webSearchEnabled
+                ? 'bg-sky-500/[0.08] border-sky-500/20 hover:bg-sky-500/[0.12]'
+                : 'bg-muted/20 border-border/15 hover:bg-muted/40'
+            }`}
+          >
+            <Globe className={`h-3.5 w-3.5 ${webSearchEnabled ? 'text-sky-500' : 'text-muted-foreground/50'}`} />
+            <span className={`text-xs font-medium transition-colors ${
+              webSearchEnabled
+                ? 'text-sky-600 dark:text-sky-400'
+                : 'text-muted-foreground/60'
+            }`}>
+              Web Search
+            </span>
+          </button>
         </div>
 
         <div className={`relative flex items-end gap-2 rounded-2xl border bg-muted/30 p-2 transition-all ${inputBorderClass}`}>

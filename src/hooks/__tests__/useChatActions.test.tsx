@@ -141,6 +141,8 @@ describe('useChatActions', () => {
     });
     // Also mock the static getState method - delegate to mockChatStore.getState so tests can override it
     (useChatStore as unknown as { getState: jest.Mock }).getState = jest.fn(() => mockChatStore.getState());
+    // Also mock useChatDataStore.getState for handleLoadConversation
+    (useChatDataStore as unknown as { getState: jest.Mock }).getState = jest.fn(() => mockChatDataStore);
   });
 
   describe('handleLoadConversation', () => {
@@ -152,8 +154,11 @@ describe('useChatActions', () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          messages: mockMessages,
-          conversation: { category: 'assistant' }
+          success: true,
+          data: {
+            messages: mockMessages,
+            conversation: { category: 'assistant' }
+          }
         })
       };
       global.fetch = jest.fn().mockResolvedValue(mockResponse);
@@ -167,6 +172,21 @@ describe('useChatActions', () => {
       expect(global.fetch).toHaveBeenCalledWith('/api/conversations/conv-1');
       expect(mockSetMessages).toHaveBeenCalledWith(mockMessages);
       expect(mockSetActiveCategory).toHaveBeenCalledWith('assistant');
+      expect(mockChatDataStore.setActiveConversationId).toHaveBeenCalledWith('conv-1');
+    });
+
+    it('should not call setActiveConversationId on API error', async () => {
+      const mockResponse = { ok: false };
+      global.fetch = jest.fn().mockResolvedValue(mockResponse);
+
+      const { result } = renderHook(() => useChatActions(jest.fn()));
+
+      await act(async () => {
+        await result.current.handleLoadConversation('conv-1');
+      });
+
+      expect(mockChatDataStore.setActiveConversationId).not.toHaveBeenCalled();
+      expect(mockSetMessages).not.toHaveBeenCalled();
     });
 
     it('should handle API error gracefully', async () => {

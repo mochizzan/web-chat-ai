@@ -35,18 +35,21 @@ export function useChatActions(handleSend: (message: string) => void) {
 
   const handleLoadConversation = useCallback(
     async (id: string) => {
-      const { setMessages, setActiveCategory } = useChatStore.getState();
+      const { setMessages, setActiveCategory, setActiveConversationId } =
+        useChatDataStore.getState();
       try {
         console.log(`[${new Date().toISOString()}] [useChatActions] handleLoadConversation: Fetching conversation`, { id });
         const res = await fetch(`/api/conversations/${id}`);
         if (res.ok) {
-          const data = await res.json();
-          if (data.messages) {
+          const json = await res.json();
+          const data = json.data;
+          if (data?.messages) {
             setMessages(data.messages);
           }
-          if (data.conversation?.category) {
+          if (data?.conversation?.category) {
             setActiveCategory(data.conversation.category);
           }
+          setActiveConversationId(id);
         }
       } catch (error) {
         console.log(`[${new Date().toISOString()}] [useChatActions] handleLoadConversation: Error`, { error });
