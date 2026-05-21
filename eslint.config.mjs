@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference folder (pre-migration backup)
+    "ai-chat-web-pre-migration/**",
   ]),
 ]);
 

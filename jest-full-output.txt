@@ -1,0 +1,251 @@
+  console.error
+    [NotificationService] Broadcast Error: Error: WS Broadcast failed with status 500: Internal Server Error
+        at Object.broadcast (D:\Project\webchat AI\ai-chat-web\src\services\notification.service.ts:26:15)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\services\__tests__\notification.service.test.ts:90:7)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at Object.error [as broadcast] (src/services/notification.service.ts:29:15)
+      at Object.<anonymous> (src/services/__tests__/notification.service.test.ts:90:7)
+
+  console.error
+    [NotificationService] Broadcast Error: Error: Network error
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\services\__tests__\notification.service.test.ts:97:53)
+        at Promise.finally.completed (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+        at _callCircusTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at run (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+        at runAndTransformResultsToJestFormat (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+        at jestAdapter (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\runner.js:111:19)
+        at runTestInternal (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:276:16)
+        at runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:344:7)
+        at Object.worker (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:498:12)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at Object.error [as broadcast] (src/services/notification.service.ts:29:15)
+      at Object.<anonymous> (src/services/__tests__/notification.service.test.ts:100:7)
+
+  console.error
+    [NotificationService] Broadcast Error: Error: Fetch not available
+        at D:\Project\webchat AI\ai-chat-web\src\services\__tests__\notification.service.test.ts:111:15
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-mock@30.4.1\node_modules\jest-mock\build\index.js:305:39
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-mock@30.4.1\node_modules\jest-mock\build\index.js:312:13
+        at mockConstructor (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-mock@30.4.1\node_modules\jest-mock\build\index.js:102:19)
+        at Object.fetch [as broadcast] (D:\Project\webchat AI\ai-chat-web\src\services\notification.service.ts:15:30)
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\services\__tests__\notification.service.test.ts:114:40)
+        at Promise.finally.completed (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+        at _callCircusTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at run (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+        at runAndTransformResultsToJestFormat (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+        at jestAdapter (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\runner.js:111:19)
+        at runTestInternal (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:276:16)
+        at runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:344:7)
+        at Object.worker (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:498:12)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at Object.error [as broadcast] (src/services/notification.service.ts:29:15)
+      at Object.<anonymous> (src/services/__tests__/notification.service.test.ts:114:40)
+
+  console.error
+    [ModelService] Sync Error: Error: Failed to fetch models from OmniRouter: Unauthorized
+        at Object.syncModelsFromRemote (D:\Project\webchat AI\ai-chat-web\src\services\model.service.ts:96:15)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\services\__tests__\model.service.test.ts:231:7)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at Object.error [as syncModelsFromRemote] (src/services/model.service.ts:122:15)
+      at Object.<anonymous> (src/services/__tests__/model.service.test.ts:231:7)
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+  console.log
+    [DEBUG:B5] Deleted conversation conv-1 from server and store
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:66:19)
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+  console.warn
+    [DEBUG:B5] Delete failed: Not found
+
+    [0m [90m 68 |[39m         } [36melse[39m {
+     [90m 69 |[39m           [36mconst[39m errData [33m=[39m [36mawait[39m res[33m.[39mjson()[33m.[39m[36mcatch[39m(() [33m=>[39m ({}))[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m           console[33m.[39mwarn([32m'[DEBUG:B5] Delete failed: %s'[39m[33m,[39m errData[33m.[39merror [33m||[39m res[33m.[39mstatus)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 71 |[39m           toast({
+     [90m 72 |[39m             title[33m:[39m [32m'Gagal'[39m[33m,[39m
+     [90m 73 |[39m             description[33m:[39m errData[33m.[39merror [33m||[39m [32m'Gagal menghapus percakapan'[39m[33m,[39m[0m
+
+      at Object.warn [as handleDeleteConversation] (src/hooks/useChatActions.ts:70:19)
+      at src/hooks/__tests__/useChatActions.test.tsx:218:9
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+  console.error
+    [ChatWebSearchService] Error performing web search: Error: Search failed
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\services\__tests__\chat-web-search.service.test.ts:58:50)
+        at Promise.finally.completed (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+        at _callCircusTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at run (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+        at runAndTransformResultsToJestFormat (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+        at jestAdapter (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\runner.js:111:19)
+        at runTestInternal (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:276:16)
+        at runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:344:7)
+        at Object.worker (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:498:12)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at Object.error [as performWebSearch] (src/services/chat-web-search.service.ts:28:15)
+      at Object.<anonymous> (src/services/__tests__/chat-web-search.service.test.ts:60:22)
+
+  console.error
+    Session initialization error: Error: Network error
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\hooks\__tests__\useAuthSession.test.tsx:119:50)
+        at Promise.finally.completed (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+        at _callCircusTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+        at _runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at run (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+        at runAndTransformResultsToJestFormat (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+        at jestAdapter (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\runner.js:111:19)
+        at runTestInternal (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:276:16)
+        at runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:344:7)
+        at Object.worker (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:498:12)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at error (src/hooks/useAuthSession.ts:40:17)
+
+  console.error
+    Session initialization error: TypeError: logout is not a function
+        at logout (D:\Project\webchat AI\ai-chat-web\src\hooks\useAuthSession.ts:37:11)
+
+    [0m [90m 93 |[39m       [36mreturn[39m[33m;[39m
+     [90m 94 |[39m     }
+    [31m[1m>[22m[39m[90m 95 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 96 |[39m   }[33m;[39m
+     [90m 97 |[39m })[33m;[39m
+     [90m 98 |[39m[0m
+
+      at console.error (jest.setup.js:95:19)
+      at error (src/hooks/useAuthSession.ts:40:17)
+
+---------------------------------|---------|----------|---------|---------|-------------------------------------------------------------
+File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                           
+---------------------------------|---------|----------|---------|---------|-------------------------------------------------------------
+All files                        |   45.54 |    39.05 |   62.03 |   46.71 |                                                             
+ hooks                           |   23.51 |    14.54 |   23.15 |   23.71 |                                                             
+  use-auto-scroll.ts             |       0 |        0 |       0 |       0 | 1-9                                                         
+  use-mobile.ts                  |       0 |      100 |       0 |       0 | 1-25                                                        
+  use-mounted.ts                 |       0 |      100 |       0 |       0 | 3-18                                                        
+  use-toast.ts                   |   22.41 |        0 |       0 |   20.37 | 33-34,62-74,78-127,137-190                                  
+  use-websocket.ts               |       0 |      100 |       0 |       0 | 3-10                                                        
+  useAdminAnalytics.ts           |       0 |        0 |       0 |       0 | 3-98                                                        
+  useAdminModels.ts              |       0 |        0 |       0 |       0 | 3-136                                                       
+  useAdminUsers.ts               |       0 |        0 |       0 |       0 | 3-71                                                        
+  useAuthSession.ts              |   42.85 |    48.21 |   66.66 |   43.39 | 53-105                                                      
+  useChatActions.ts              |   67.13 |    48.61 |   68.42 |   71.42 | 39-51,90-98,106-134                                         
+  useChatStream.ts               |    13.9 |     1.21 |   27.77 |   14.62 | 128-171,178-198,205-206,213-411,449-498,523-666,689,692-712 
+ repositories                    |   97.43 |     86.6 |     100 |   97.35 |                                                             
+  analytics.repo.ts              |     100 |      100 |     100 |     100 |                                                             
+  billing.repo.ts                |      95 |    86.84 |     100 |   94.91 | 46,49-50                                                    
+  chat.repo.ts                   |     100 |      100 |     100 |     100 |                                                             
+  model.repo.ts                  |     100 |    83.33 |     100 |     100 | 36,82                                                       
+  user.repo.ts                   |   96.15 |    83.33 |     100 |      96 | 49                                                          
+ services                        |   61.15 |     49.9 |    87.5 |   63.93 |                                                             
+  admin.service.ts               |     100 |      100 |     100 |     100 |                                                             
+  analytics.service.ts           |   78.04 |    89.62 |     100 |   78.04 | 6-8,10-11,19-20,24-25                                       
+  auth.service.ts                |   96.77 |      100 |   83.33 |   96.77 | 24                                                          
+  billing.service.ts             |   93.33 |    83.33 |     100 |   92.85 | 125-127                                                     
+  chat-orchestrator.service.ts   |      20 |     9.09 |      20 |   21.53 | 63-79,98-100,202,206-213,233-541                            
+  chat-persistence.service.ts    |     100 |       85 |     100 |     100 | 13-15                                                       
+  chat-usage-tracking.service.ts |     100 |    96.42 |     100 |     100 | 36                                                          
+  chat-web-search.service.ts     |     100 |       75 |     100 |     100 | 18                                                          
+  chat.service.ts                |     100 |      100 |     100 |     100 |                                                             
+  model.service.ts               |    83.6 |    67.14 |     100 |   97.91 | 103                                                         
+  notification.service.ts        |     100 |      100 |     100 |     100 |                                                             
+---------------------------------|---------|----------|---------|---------|-------------------------------------------------------------

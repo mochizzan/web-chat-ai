@@ -1,65 +1,162 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import gsap from 'gsap';
+import { Sidebar } from '@/components/chat/sidebar';
+import { TopBar } from '@/components/chat/top-bar';
+import { MessageList } from '@/components/chat/message-list';
+import { ChatInput } from '@/components/chat/chat-input';
+import { EmptyState } from '@/components/chat/empty-state';
+import { CodeSidebar } from '@/components/chat/code-sidebar';
+import { AccountDialog } from '@/components/chat/account-dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+
+// Custom Hooks for extracted logic
+import { useChatStream } from '@/hooks/useChatStream';
+import { useChatActions } from '@/hooks/useChatActions';
+import { ChatContainer } from '@/components/chat/chat-container';
+import { StreamingIndicator } from '@/components/chat/streaming-indicator';
 
 export default function Home() {
+  // 1. AuthSession
+  // const { isLoadingConversations } = useAuthSession(); // Removed unused variable
+
+  // 2. ChatStream and chat operations from hook
+  const { handleSend, handleStop } = useChatStream();
+
+  // 3. Chat actions from hook
+  const { handleLoadConversation, handleDeleteConversation, handleEditConfirm, handleRegenerate } =
+    useChatActions(handleSend);
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [inputPrompt, setInputPrompt] = useState('');
+  const [inputKey, setInputKey] = useState(0);
+
+  const pageRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  // GSAP page entrance
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      if (mainRef.current) {
+        gsap.fromTo(
+          mainRef.current,
+          { y: 10 },
+          { y: 0, duration: 0.4, ease: 'power2.out' }
+        );
+      }
+    }, pageRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Toggle sidebar (mobile)
+  const handleToggleMobileSidebar = useCallback(() => {
+    setMobileSidebarOpen((prev) => !prev);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div ref={pageRef} className="flex h-dvh w-full overflow-hidden bg-background">
+      <ChatContainer>
+        {state => {
+          const {
+            messages,
+            isGenerating,
+            sidebarOpen,
+            toggleSidebar,
+            resetChat,
+            setActiveCategory,
+          } = state;
+
+          // editingMessage is derived but not used directly in render, kept for potential future use
+          // const _editingMessage = editingMessageId ? messages.find((m) => m.id === editingMessageId) : null; // Removed unused variable
+
+          // Update handleNewChat to use resetChat from state
+          const updatedHandleNewChat = () => {
+            resetChat();
+            setMobileSidebarOpen(false);
+          };
+
+          // Update handleSelectConversation to use state setters
+          const updatedHandleSelectConversation = async (id: string) => {
+            setMobileSidebarOpen(false);
+            if (isLoadingMessages) return;
+            setIsLoadingMessages(true);
+            try {
+              await handleLoadConversation(id);
+            } finally {
+              setIsLoadingMessages(false);
+            }
+          };
+
+          // Update handleQuickAction to use state setter
+          const updatedHandleQuickAction = (prompt: string, category: string) => {
+            setActiveCategory(category);
+            setInputPrompt(prompt);
+            setInputKey((prev) => prev + 1);
+          };
+
+          return (
+            <>
+              {/* Desktop Sidebar */}
+              <div
+                className={`hidden lg:flex shrink-0 flex-col border-r transition-all duration-300 ease-in-out ${
+                  sidebarOpen ? 'w-72' : 'w-0 overflow-hidden'
+                }`}
+              >
+                <Sidebar
+                  onNewChat={updatedHandleNewChat}
+                  onSelectConversation={updatedHandleSelectConversation}
+                  onDeleteConversation={handleDeleteConversation}
+                  onToggleSidebar={toggleSidebar}
+                  isMobile={false}
+                />
+              </div>
+
+              {/* Mobile Sidebar (Sheet) */}
+              <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+                <SheetContent side="left" className="w-[280px] p-0 [&>button]:hidden">
+                  <SheetHeader className="sr-only">
+                    <SheetTitle>Sidebar</SheetTitle>
+                  </SheetHeader>
+                  <Sidebar
+                    onNewChat={updatedHandleNewChat}
+                    onSelectConversation={updatedHandleSelectConversation}
+                    onDeleteConversation={handleDeleteConversation}
+                    onClose={() => setMobileSidebarOpen(false)}
+                    onToggleSidebar={toggleSidebar}
+                    isMobile
+                  />
+                </SheetContent>
+              </Sheet>
+
+              {/* Main Content */}
+              <div ref={mainRef} className="flex flex-1 flex-col min-w-0 overflow-hidden">
+                <TopBar onToggleSidebar={toggleSidebar} onToggleMobileSidebar={handleToggleMobileSidebar} />
+
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  {messages.length === 0 && !isGenerating ? (
+                    <EmptyState onQuickAction={updatedHandleQuickAction} />
+                  ) : (
+                    <MessageList onEditConfirm={handleEditConfirm} onRegenerate={handleRegenerate} />
+                  )}
+                  {isGenerating && <StreamingIndicator />}
+                </div>
+
+                <ChatInput onSend={handleSend} onStop={handleStop} initialMessage={inputPrompt} key={inputKey} />
+              </div>
+
+              <CodeSidebar />
+              <AccountDialog />
+            </>
+          );
+        }}
+      </ChatContainer>
     </div>
   );
 }

@@ -1,26 +1,312 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-emerald: var(--emerald);
+  --color-emerald-foreground: var(--emerald-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Material Design 3 Inspired — Soft Sage Green ──────────────────
+   Hue: 155 (green), very low chroma for calm, muted appearance.
+   Light: soft, airy, with gentle green tint.
+   Dark: deep, restful, with subtle green undertone.
+   No glow, no vivid — everything is soft and understated.
+*/
+
+:root {
+  --radius: 0.625rem;
+  /* Surface — very subtle green tint, almost neutral */
+  --background: oklch(0.99 0.002 155);
+  --foreground: oklch(0.14 0.008 155);
+  /* Cards & popovers — clean white */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.14 0.008 155);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0.008 155);
+  /* Primary — muted sage green, not saturated */
+  --primary: oklch(0.48 0.055 155);
+  --primary-foreground: oklch(0.98 0.003 155);
+  /* Secondary — very light sage */
+  --secondary: oklch(0.94 0.008 155);
+  --secondary-foreground: oklch(0.20 0.012 155);
+  /* Muted — barely there green tint */
+  --muted: oklch(0.95 0.005 155);
+  --muted-foreground: oklch(0.48 0.012 155);
+  /* Accent — subtle sage */
+  --accent: oklch(0.92 0.01 155);
+  --accent-foreground: oklch(0.22 0.012 155);
+  /* Destructive — soft, not aggressive red */
+  --destructive: oklch(0.55 0.15 25);
+  /* Borders & inputs — very subtle */
+  --border: oklch(0.90 0.006 155);
+  --input: oklch(0.90 0.006 155);
+  --ring: oklch(0.48 0.055 155);
+  /* Charts — muted tones */
+  --chart-1: oklch(0.48 0.055 155);
+  --chart-2: oklch(0.60 0.06 155);
+  --chart-3: oklch(0.42 0.04 155);
+  --chart-4: oklch(0.72 0.05 155);
+  --chart-5: oklch(0.35 0.03 155);
+  /* Sidebar — very light sage */
+  --sidebar: oklch(0.975 0.004 155);
+  --sidebar-foreground: oklch(0.14 0.008 155);
+  --sidebar-primary: oklch(0.48 0.055 155);
+  --sidebar-primary-foreground: oklch(0.98 0.003 155);
+  --sidebar-accent: oklch(0.92 0.01 155);
+  --sidebar-accent-foreground: oklch(0.22 0.012 155);
+  --sidebar-border: oklch(0.90 0.006 155);
+  --sidebar-ring: oklch(0.48 0.055 155);
+  /* Emerald alias */
+  --emerald: oklch(0.48 0.055 155);
+  --emerald-foreground: oklch(0.98 0.003 155);
+}
+
+.dark {
+  /* Surface — deep with subtle green tint */
+  --background: oklch(0.13 0.004 155);
+  --foreground: oklch(0.96 0.003 155);
+  /* Cards — slightly elevated */
+  --card: oklch(0.16 0.005 155);
+  --card-foreground: oklch(0.96 0.003 155);
+  --popover: oklch(0.16 0.005 155);
+  --popover-foreground: oklch(0.96 0.003 155);
+  /* Primary — lighter muted sage for dark bg */
+  --primary: oklch(0.62 0.06 155);
+  --primary-foreground: oklch(0.13 0.004 155);
+  /* Secondary */
+  --secondary: oklch(0.22 0.006 155);
+  --secondary-foreground: oklch(0.90 0.006 155);
+  /* Muted */
+  --muted: oklch(0.20 0.005 155);
+  --muted-foreground: oklch(0.60 0.01 155);
+  /* Accent */
+  --accent: oklch(0.22 0.008 155);
+  --accent-foreground: oklch(0.90 0.006 155);
+  /* Destructive — softer in dark */
+  --destructive: oklch(0.65 0.14 25);
+  /* Borders — barely visible */
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.62 0.06 155);
+  /* Charts */
+  --chart-1: oklch(0.62 0.06 155);
+  --chart-2: oklch(0.55 0.065 155);
+  --chart-3: oklch(0.72 0.05 155);
+  --chart-4: oklch(0.45 0.04 155);
+  --chart-5: oklch(0.35 0.03 155);
+  /* Sidebar */
+  --sidebar: oklch(0.15 0.004 155);
+  --sidebar-foreground: oklch(0.96 0.003 155);
+  --sidebar-primary: oklch(0.62 0.06 155);
+  --sidebar-primary-foreground: oklch(0.13 0.004 155);
+  --sidebar-accent: oklch(0.22 0.008 155);
+  --sidebar-accent-foreground: oklch(0.90 0.006 155);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.62 0.06 155);
+  /* Emerald alias */
+  --emerald: oklch(0.62 0.06 155);
+  --emerald-foreground: oklch(0.13 0.004 155);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom scrollbar — very subtle, matching the muted theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.48 0.055 155 / 18%);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.48 0.055 155 / 35%);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.62 0.06 155 / 18%);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.62 0.06 155 / 35%);
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.48 0.055 155 / 18%) transparent;
+}
+.dark .custom-scrollbar {
+  scrollbar-color: oklch(0.62 0.06 155 / 18%) transparent;
+}
+
+/* Markdown content styles — soft, no vivid colors */
+.markdown-content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.markdown-content p {
+  margin-bottom: 0.4rem;
+}
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  font-weight: 600;
+  margin-top: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+.markdown-content h1:first-child,
+.markdown-content h2:first-child,
+.markdown-content h3:first-child {
+  margin-top: 0;
+}
+.markdown-content h1 { font-size: 1.15rem; }
+.markdown-content h2 { font-size: 1.05rem; }
+.markdown-content h3 { font-size: 0.95rem; }
+.markdown-content ul {
+  list-style-type: disc;
+  margin-left: 1.125rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.4rem;
+}
+.markdown-content ol {
+  list-style-type: decimal;
+  margin-left: 1.125rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.4rem;
+}
+.markdown-content li {
+  margin-bottom: 0.1rem;
+}
+.markdown-content blockquote {
+  border-left: 3px solid oklch(0.48 0.055 155 / 30%);
+  padding-left: 0.625rem;
+  margin: 0.4rem 0;
+  color: oklch(0.48 0.012 155);
+}
+.markdown-content hr {
+  border-color: oklch(0.90 0.006 155);
+  margin: 0.5rem 0;
+}
+.markdown-content a {
+  color: oklch(0.48 0.055 155);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-content a:hover {
+  color: oklch(0.42 0.06 155);
+}
+.markdown-content strong {
+  font-weight: 600;
+}
+.markdown-content pre {
+  margin: 0.4rem 0;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.markdown-content code:not(pre code) {
+  background: oklch(0.95 0.005 155);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
+  font-family: var(--font-geist-mono);
+}
+
+/* User message inline code — soft white variant */
+.bg-primary .markdown-content code:not(pre code) {
+  background: oklch(1 0 0 / 12%);
+}
+.bg-primary .markdown-content a {
+  color: oklch(0.92 0.03 155);
+}
+
+.dark .markdown-content blockquote {
+  color: oklch(0.60 0.01 155);
+  border-left-color: oklch(0.62 0.06 155 / 30%);
+}
+.dark .markdown-content hr {
+  border-color: oklch(1 0 0 / 8%);
+}
+.dark .markdown-content a {
+  color: oklch(0.62 0.06 155);
+}
+.dark .markdown-content a:hover {
+  color: oklch(0.72 0.05 155);
+}
+.dark .markdown-content code:not(pre code) {
+  background: oklch(0.22 0.006 155);
+}
+
+/* Typing indicator */
+@keyframes typing-dot {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+.typing-dot {
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
 }

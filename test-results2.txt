@@ -1,0 +1,1676 @@
+FAIL src/services/__tests__/auth.service.test.ts
+  AuthService
+    register
+      √ should register a new user successfully (19 ms)
+      √ should throw error if user already exists (32 ms)
+      √ should handle database errors during registration (5 ms)
+    login
+      √ should login successfully with valid credentials (5 ms)
+      √ should throw error for invalid email (2 ms)
+      √ should throw error for incorrect password (2 ms)
+      √ should throw error if user has no password (2 ms)
+    validateSession
+      √ should validate a valid token and return user data (3 ms)
+      √ should throw error for invalid token (3 ms)
+      × should throw error if user not found (22 ms)
+    mapUserToDto
+      √ should map user object to DTO correctly (1 ms)
+    generateToken
+      √ should generate JWT token correctly (2 ms)
+
+  ● AuthService › validateSession › should throw error if user not found
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected substring: "User not found"
+    Received message:   "Invalid or expired session"
+
+        [0m [90m 70 |[39m       [36mreturn[39m [36mthis[39m[33m.[39mmapUserToDto(user)[33m;[39m
+         [90m 71 |[39m     } [36mcatch[39m {
+        [31m[1m>[22m[39m[90m 72 |[39m       [36mthrow[39m [36mnew[39m [33mError[39m([32m'Invalid or expired session'[39m)[33m;[39m
+         [90m    |[39m             [31m[1m^[22m[39m
+         [90m 73 |[39m     }
+         [90m 74 |[39m   }[33m,[39m
+         [90m 75 |[39m[0m
+
+      at Object.validateSession (src/services/auth.service.ts:72:13)
+      at Object.<anonymous> (src/services/__tests__/auth.service.test.ts:269:7)
+      at Object.toThrow (node_modules/.pnpm/expect@30.4.1/node_modules/expect/build/index.js:2155:20)
+      at Object.<anonymous> (src/services/__tests__/auth.service.test.ts:269:64)
+
+FAIL src/services/__tests__/billing.service.test.ts
+  BillingService
+    checkSufficientCredit
+      √ should return true if user has sufficient credit (11 ms)
+      √ should return false if user has insufficient credit (1 ms)
+      √ should throw error if user not found (31 ms)
+    getAccountDetails
+      √ should return user and credit logs (3 ms)
+      √ should throw error if user not found (3 ms)
+    getUsageLogs
+      √ should return usage logs for user (3 ms)
+    processTopup
+      × should process topup successfully within transaction (4 ms)
+      √ should throw error for non-positive amount (3 ms)
+      × should throw error if failed to get updated balance (2 ms)
+      × should rollback transaction on error (4 ms)
+    deductCredit
+      × should deduct credit successfully within transaction (3 ms)
+      √ should throw error for negative amount (10 ms)
+      × should throw error if user not found (2 ms)
+      × should throw error if insufficient balance (2 ms)
+      × should rollback transaction on error (3 ms)
+
+  ● BillingService › processTopup › should process topup successfully within transaction
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "user-123", 50, Any<Object>
+
+    Number of calls: 0
+
+    [0m [90m 157 |[39m
+     [90m 158 |[39m       expect(mockedTransaction)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39many([33mFunction[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 159 |[39m       expect(mockedBillingRepository[33m.[39mupdateUserCredit)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m amount[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m
+     [90m     |[39m                                                        [31m[1m^[22m[39m
+     [90m 160 |[39m       expect(mockedBillingRepository[33m.[39mgetUserBalance)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m
+     [90m 161 |[39m       expect(mockedBillingRepository[33m.[39msaveCreditLog)[33m.[39mtoHaveBeenCalledWith(
+     [90m 162 |[39m         expect[33m.[39mobjectContaining({[0m
+
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:159:56)
+
+  ● BillingService › processTopup › should throw error if failed to get updated balance
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+    [0m [90m 192 |[39m       mockedBillingRepository[33m.[39mgetUserBalance[33m.[39mmockResolvedValue([36mnull[39m)[33m;[39m
+     [90m 193 |[39m
+    [31m[1m>[22m[39m[90m 194 |[39m       [36mawait[39m expect([33mBillingService[39m[33m.[39mprocessTopup(userId[33m,[39m amount))[33m.[39mrejects[33m.[39mtoThrow(
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 195 |[39m         [32m'Failed to retrieve updated balance'[39m
+     [90m 196 |[39m       )[33m;[39m
+     [90m 197 |[39m     })[33m;[39m[0m
+
+      at expect (node_modules/.pnpm/expect@30.4.1/node_modules/expect/build/index.js:2116:15)
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:194:13)
+
+  ● BillingService › processTopup › should rollback transaction on error
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 218 |[39m       )[33m;[39m
+     [90m 219 |[39m
+    [31m[1m>[22m[39m[90m 220 |[39m       expect(mockConn[33m.[39mrollback)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                                 [31m[1m^[22m[39m
+     [90m 221 |[39m     })[33m;[39m
+     [90m 222 |[39m   })[33m;[39m
+     [90m 223 |[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:220:33)
+
+  ● BillingService › deductCredit › should deduct credit successfully within transaction
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "user-123", Any<Object>
+
+    Number of calls: 0
+
+    [0m [90m 240 |[39m
+     [90m 241 |[39m       expect(mockedTransaction)[33m.[39mtoHaveBeenCalledWith(expect[33m.[39many([33mFunction[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 242 |[39m       expect(mockedBillingRepository[33m.[39mlockUserForUpdate)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m
+     [90m     |[39m                                                         [31m[1m^[22m[39m
+     [90m 243 |[39m       expect(mockedBillingRepository[33m.[39mgetUserBalance)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m
+     [90m 244 |[39m       expect(mockedBillingRepository[33m.[39mupdateUserCredit)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m [33m-[39mamount[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m
+     [90m 245 |[39m       expect(mockedBillingRepository[33m.[39mupdateTotalSpent)[33m.[39mtoHaveBeenCalledWith(userId[33m,[39m amount[33m,[39m expect[33m.[39many([33mObject[39m))[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:242:57)
+
+  ● BillingService › deductCredit › should throw error if user not found
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+    [0m [90m 278 |[39m       mockedBillingRepository[33m.[39mgetUserBalance[33m.[39mmockResolvedValue([36mnull[39m)[33m;[39m
+     [90m 279 |[39m
+    [31m[1m>[22m[39m[90m 280 |[39m       [36mawait[39m expect([33mBillingService[39m[33m.[39mdeductCredit(userId[33m,[39m amount[33m,[39m [32m'test'[39m))[33m.[39mrejects[33m.[39mtoThrow(
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 281 |[39m         [32m'User not found'[39m
+     [90m 282 |[39m       )[33m;[39m
+     [90m 283 |[39m     })[33m;[39m[0m
+
+      at expect (node_modules/.pnpm/expect@30.4.1/node_modules/expect/build/index.js:2116:15)
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:280:13)
+
+  ● BillingService › deductCredit › should throw error if insufficient balance
+
+    expect(received).rejects.toThrow()
+
+    Received promise resolved instead of rejected
+    Resolved to value: undefined
+
+    [0m [90m 291 |[39m       mockedBillingRepository[33m.[39mgetUserBalance[33m.[39mmockResolvedValue(currentBalance)[33m;[39m
+     [90m 292 |[39m
+    [31m[1m>[22m[39m[90m 293 |[39m       [36mawait[39m expect([33mBillingService[39m[33m.[39mdeductCredit(userId[33m,[39m amount[33m,[39m [32m'test'[39m))[33m.[39mrejects[33m.[39mtoThrow(
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 294 |[39m         [32m'Insufficient credit'[39m
+     [90m 295 |[39m       )[33m;[39m
+     [90m 296 |[39m     })[33m;[39m[0m
+
+      at expect (node_modules/.pnpm/expect@30.4.1/node_modules/expect/build/index.js:2116:15)
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:293:13)
+
+  ● BillingService › deductCredit › should rollback transaction on error
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 318 |[39m       )[33m;[39m
+     [90m 319 |[39m
+    [31m[1m>[22m[39m[90m 320 |[39m       expect(mockConn[33m.[39mrollback)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                                 [31m[1m^[22m[39m
+     [90m 321 |[39m     })[33m;[39m
+     [90m 322 |[39m   })[33m;[39m
+     [90m 323 |[39m })[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/billing.service.test.ts:320:33)
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+  console.log
+    [DEBUG:B5] Deleted conversation conv-1 from server and store
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:66:19)
+
+FAIL src/repositories/__tests__/model.repo.test.ts
+  ModelRepository
+    getModels
+      √ should fetch all models with default filters (active and maintenance) (19 ms)
+      √ should fetch all models including disabled when all=true (35 ms)
+      √ should filter by provider (3 ms)
+      √ should combine filters: all=false with provider (19 ms)
+    getModelById
+      √ should fetch model by id when exists (10 ms)
+      √ should return null when model not found (8 ms)
+    updateModel
+      √ should update model with provided fields (3 ms)
+      √ should not call query if no updates provided (2 ms)
+      √ should handle multiple field updates (5 ms)
+    deleteModel
+      √ should delete model by id (2 ms)
+    getActiveModels
+      √ should fetch only active models (3 ms)
+    updateModelPricing
+      √ should update model pricing (3 ms)
+    updateModelStatus
+      √ should update model status (1 ms)
+    syncModels
+      × should sync multiple models in a transaction (5 ms)
+      × should handle empty models array (6 ms)
+
+  ● ModelRepository › syncModels › should sync multiple models in a transaction
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 203 |[39m       [36mawait[39m [33mModelRepository[39m[33m.[39msyncModels(models)[33m;[39m
+     [90m 204 |[39m
+    [31m[1m>[22m[39m[90m 205 |[39m       expect(mockTransaction)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 206 |[39m     })[33m;[39m
+     [90m 207 |[39m
+     [90m 208 |[39m     it([32m'should handle empty models array'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/model.repo.test.ts:205:31)
+
+  ● ModelRepository › syncModels › should handle empty models array
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 218 |[39m       [36mawait[39m [33mModelRepository[39m[33m.[39msyncModels([])[33m;[39m
+     [90m 219 |[39m       [90m// Should complete without error[39m
+    [31m[1m>[22m[39m[90m 220 |[39m       expect(mockTransaction)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 221 |[39m     })[33m;[39m
+     [90m 222 |[39m   })[33m;[39m
+     [90m 223 |[39m })[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/model.repo.test.ts:220:31)
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+  console.warn
+    [DEBUG:B5] Delete failed: Not found
+
+    [0m [90m 68 |[39m         } [36melse[39m {
+     [90m 69 |[39m           [36mconst[39m errData [33m=[39m [36mawait[39m res[33m.[39mjson()[33m.[39m[36mcatch[39m(() [33m=>[39m ({}))[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m           console[33m.[39mwarn([32m'[DEBUG:B5] Delete failed: %s'[39m[33m,[39m errData[33m.[39merror [33m||[39m res[33m.[39mstatus)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 71 |[39m           toast({
+     [90m 72 |[39m             title[33m:[39m [32m'Gagal'[39m[33m,[39m
+     [90m 73 |[39m             description[33m:[39m errData[33m.[39merror [33m||[39m [32m'Gagal menghapus percakapan'[39m[33m,[39m[0m
+
+      at Object.warn [as handleDeleteConversation] (src/hooks/useChatActions.ts:70:19)
+      at src/hooks/__tests__/useChatActions.test.tsx:143:9
+
+  console.log
+    [DEBUG:B5] Deleting conversation id=conv-1
+
+      at Object.log [as handleDeleteConversation] (src/hooks/useChatActions.ts:61:15)
+
+FAIL src/services/__tests__/chat-orchestrator.service.test.ts
+  ChatOrchestratorService
+    streamChat
+      × should initialize stream with correct event (8 ms)
+      × should handle model not found and use defaults (3 ms)
+      √ should throw error for disabled model (162 ms)
+      × should handle fetch error from OmniRouter (8 ms)
+      × should handle non-ok response from OmniRouter (2 ms)
+      × should perform web search when enabled (2 ms)
+      × should skip web search when not needed (2 ms)
+      × should check credit before API call for non-free models (2 ms)
+      × should skip credit check for free models (2 ms)
+      × should send credit error event if insufficient credits (2 ms)
+
+  ● ChatOrchestratorService › streamChat › should initialize stream with correct event
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 55 |[39m
+     [90m 56 |[39m       [90m// Create a mock readable stream[39m
+    [31m[1m>[22m[39m[90m 57 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m    |[39m                          [31m[1m^[22m[39m
+     [90m 58 |[39m         start(controller) {
+     [90m 59 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 60 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:57:26)
+
+  ● ChatOrchestratorService › streamChat › should handle model not found and use defaults
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 100 |[39m       mockedChatPersistenceService[33m.[39mensureConversation[33m.[39mmockResolvedValue([32m'conv-generated'[39m)[33m;[39m
+     [90m 101 |[39m
+    [31m[1m>[22m[39m[90m 102 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 103 |[39m         start(controller) {
+     [90m 104 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 105 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:102:26)
+
+  ● ChatOrchestratorService › streamChat › should handle fetch error from OmniRouter
+
+    ReferenceError: TextEncoder is not defined
+
+    [0m [90m 192 |[39m     [36mconst[39m now [33m=[39m [36mnew[39m [33mDate[39m()[33m.[39mtoISOString()[33m;[39m
+     [90m 193 |[39m
+    [31m[1m>[22m[39m[90m 194 |[39m     [36mconst[39m encoder [33m=[39m [36mnew[39m [33mTextEncoder[39m()[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 195 |[39m     [36mlet[39m fullContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 196 |[39m     [36mlet[39m fullThinkingContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 197 |[39m     [36mlet[39m doneSent [33m=[39m [36mfalse[39m[33m;[39m[0m
+
+      at Object.streamChat (src/services/chat-orchestrator.service.ts:194:21)
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:167:22)
+
+  ● ChatOrchestratorService › streamChat › should handle non-ok response from OmniRouter
+
+    ReferenceError: TextEncoder is not defined
+
+    [0m [90m 192 |[39m     [36mconst[39m now [33m=[39m [36mnew[39m [33mDate[39m()[33m.[39mtoISOString()[33m;[39m
+     [90m 193 |[39m
+    [31m[1m>[22m[39m[90m 194 |[39m     [36mconst[39m encoder [33m=[39m [36mnew[39m [33mTextEncoder[39m()[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 195 |[39m     [36mlet[39m fullContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 196 |[39m     [36mlet[39m fullThinkingContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 197 |[39m     [36mlet[39m doneSent [33m=[39m [36mfalse[39m[33m;[39m[0m
+
+      at Object.streamChat (src/services/chat-orchestrator.service.ts:194:21)
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:201:22)
+
+  ● ChatOrchestratorService › streamChat › should perform web search when enabled
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 228 |[39m       mockedChatWebSearchService[33m.[39mbuildSystemContent[33m.[39mmockReturnValue([32m'System content with web search'[39m)[33m;[39m
+     [90m 229 |[39m
+    [31m[1m>[22m[39m[90m 230 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 231 |[39m         start(controller) {
+     [90m 232 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 233 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:230:26)
+
+  ● ChatOrchestratorService › streamChat › should skip web search when not needed
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 274 |[39m       mockedChatWebSearchService[33m.[39mdetectWebSearchIntent[33m.[39mmockReturnValue({ shouldSearch[33m:[39m [36mfalse[39m })[33m;[39m
+     [90m 275 |[39m
+    [31m[1m>[22m[39m[90m 276 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 277 |[39m         start(controller) {
+     [90m 278 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 279 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:276:26)
+
+  ● ChatOrchestratorService › streamChat › should check credit before API call for non-free models
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 316 |[39m       mockedChatPersistenceService[33m.[39mensureConversation[33m.[39mmockResolvedValue([32m'conv-generated'[39m)[33m;[39m
+     [90m 317 |[39m
+    [31m[1m>[22m[39m[90m 318 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 319 |[39m         start(controller) {
+     [90m 320 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 321 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:318:26)
+
+  ● ChatOrchestratorService › streamChat › should skip credit check for free models
+
+    ReferenceError: ReadableStream is not defined
+
+    [0m [90m 356 |[39m       mockedChatPersistenceService[33m.[39mensureConversation[33m.[39mmockResolvedValue([32m'conv-generated'[39m)[33m;[39m
+     [90m 357 |[39m
+    [31m[1m>[22m[39m[90m 358 |[39m       [36mconst[39m mockStream [33m=[39m [36mnew[39m [33mReadableStream[39m({
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 359 |[39m         start(controller) {
+     [90m 360 |[39m           controller[33m.[39menqueue([36mnew[39m [33mTextEncoder[39m()[33m.[39mencode([32m'data: test\n\n'[39m))[33m;[39m
+     [90m 361 |[39m           controller[33m.[39mclose()[33m;[39m[0m
+
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:358:26)
+
+  ● ChatOrchestratorService › streamChat › should send credit error event if insufficient credits
+
+    ReferenceError: TextEncoder is not defined
+
+    [0m [90m 192 |[39m     [36mconst[39m now [33m=[39m [36mnew[39m [33mDate[39m()[33m.[39mtoISOString()[33m;[39m
+     [90m 193 |[39m
+    [31m[1m>[22m[39m[90m 194 |[39m     [36mconst[39m encoder [33m=[39m [36mnew[39m [33mTextEncoder[39m()[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 195 |[39m     [36mlet[39m fullContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 196 |[39m     [36mlet[39m fullThinkingContent [33m=[39m [32m''[39m[33m;[39m
+     [90m 197 |[39m     [36mlet[39m doneSent [33m=[39m [36mfalse[39m[33m;[39m[0m
+
+      at Object.streamChat (src/services/chat-orchestrator.service.ts:194:21)
+      at Object.<anonymous> (src/services/__tests__/chat-orchestrator.service.test.ts:402:22)
+
+PASS src/services/__tests__/chat-usage-tracking.service.test.ts
+  ChatUsageTrackingService
+    calculateCost
+      √ should calculate cost correctly for paid model (15 ms)
+      √ should return zero cost for free model (4 ms)
+      √ should return null for zero tokens (2 ms)
+      √ should apply input discount correctly (2 ms)
+      √ should apply output discount correctly (2 ms)
+      √ should apply both discounts correctly (2 ms)
+    estimateTokens
+      √ should estimate token count correctly (1 ms)
+      √ should handle empty string (1 ms)
+    saveUsageLog
+      √ should save usage log via ChatRepository (4 ms)
+    checkCredit
+      √ should return credit remaining for valid user (2 ms)
+      √ should return -1 for free models (3 ms)
+      √ should throw error if credit insufficient (35 ms)
+      √ should handle database errors gracefully (1 ms)
+      √ should throw error if user not found (2 ms)
+    deductCredit
+      √ should deduct credit via BillingService (2 ms)
+    getCreditRemaining
+      √ should return credit balance for user (2 ms)
+      √ should return -1 if user not found (1 ms)
+      √ should return -1 on database error (1 ms)
+    buildUsageLog
+      √ should build usage log object correctly (1 ms)
+
+FAIL src/repositories/__tests__/billing.repo.test.ts
+  BillingRepository
+    saveCreditLog
+      √ should insert credit log without connection (4 ms)
+      × should insert credit log with connection (3 ms)
+      √ should handle partial log data (2 ms)
+    getUsageLogs
+      √ should fetch usage logs without connection (2 ms)
+      × should fetch usage logs with connection (1 ms)
+    getAdminUsageLogs
+      √ should fetch admin usage logs with pagination and no search (2 ms)
+      √ should filter by search term (2 ms)
+      √ should handle different period filters (1 ms)
+      √ should handle empty result (2 ms)
+    getCreditLogs
+      √ should fetch credit logs without connection (1 ms)
+      × should fetch credit logs with connection (1 ms)
+    updateTotalSpent
+      √ should update total spent without connection (1 ms)
+      × should update total spent with connection (4 ms)
+    updateUserCredit
+      √ should update user credit without connection (8 ms)
+      × should update user credit with connection (1 ms)
+    getUserBalance
+      √ should get user balance without connection when user exists (3 ms)
+      √ should return null when user not found without connection (3 ms)
+      × should get user balance with connection (1 ms)
+      × should return null when user not found with connection (1 ms)
+    lockUserForUpdate
+      × should lock user row for update (1 ms)
+
+  ● BillingRepository › saveCreditLog › should insert credit log with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 19 |[39m     
+     [90m 20 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 21 |[39m       [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m    |[39m                  [31m[1m^[22m[39m
+     [90m 22 |[39m     } [36melse[39m {
+     [90m 23 |[39m       [36mawait[39m query(sql[33m,[39m params)[33m;[39m
+     [90m 24 |[39m     }[0m
+
+      at Object.execute [as saveCreditLog] (src/repositories/billing.repo.ts:21:18)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:52:31)
+
+  ● BillingRepository › getUsageLogs › should fetch usage logs with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 30 |[39m     
+     [90m 31 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 32 |[39m       [36mconst[39m [rows] [33m=[39m [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m    |[39m                                 [31m[1m^[22m[39m
+     [90m 33 |[39m       [36mreturn[39m rows [36mas[39m [33mUsageLog[39m[][33m;[39m
+     [90m 34 |[39m     }
+     [90m 35 |[39m     [36mreturn[39m [36mawait[39m query[33m<[39m[33mUsageLog[39m[][33m>[39m(sql[33m,[39m params)[33m;[39m[0m
+
+      at Object.execute [as getUsageLogs] (src/repositories/billing.repo.ts:32:33)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:99:46)
+
+  ● BillingRepository › getCreditLogs › should fetch credit logs with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m  97 |[39m     
+     [90m  98 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m  99 |[39m       [36mconst[39m [rows] [33m=[39m [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m     |[39m                                 [31m[1m^[22m[39m
+     [90m 100 |[39m       [36mreturn[39m rows [36mas[39m [33mCreditLog[39m[][33m;[39m
+     [90m 101 |[39m     }
+     [90m 102 |[39m     [36mreturn[39m [36mawait[39m query[33m<[39m[33mCreditLog[39m[][33m>[39m(sql[33m,[39m params)[33m;[39m[0m
+
+      at Object.execute [as getCreditLogs] (src/repositories/billing.repo.ts:99:33)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:202:46)
+
+  ● BillingRepository › updateTotalSpent › should update total spent with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 108 |[39m     
+     [90m 109 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 110 |[39m       [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m     |[39m                  [31m[1m^[22m[39m
+     [90m 111 |[39m     } [36melse[39m {
+     [90m 112 |[39m       [36mawait[39m query(sql[33m,[39m params)[33m;[39m
+     [90m 113 |[39m     }[0m
+
+      at Object.execute [as updateTotalSpent] (src/repositories/billing.repo.ts:110:18)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:225:31)
+
+  ● BillingRepository › updateUserCredit › should update user credit with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 119 |[39m     
+     [90m 120 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 121 |[39m       [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m     |[39m                  [31m[1m^[22m[39m
+     [90m 122 |[39m     } [36melse[39m {
+     [90m 123 |[39m       [36mawait[39m query(sql[33m,[39m params)[33m;[39m
+     [90m 124 |[39m     }[0m
+
+      at Object.execute [as updateUserCredit] (src/repositories/billing.repo.ts:121:18)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:247:31)
+
+  ● BillingRepository › getUserBalance › should get user balance with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 130 |[39m     
+     [90m 131 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 132 |[39m       [36mconst[39m [rows][33m:[39m any [33m=[39m [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m     |[39m                                      [31m[1m^[22m[39m
+     [90m 133 |[39m       [36mreturn[39m rows[[35m0[39m][33m?[39m[33m.[39mcredit [33m?[39m[33m?[39m [36mnull[39m[33m;[39m
+     [90m 134 |[39m     }
+     [90m 135 |[39m     [36mconst[39m result [33m=[39m [36mawait[39m querySingle[33m<[39m{ credit[33m:[39m number }[33m>[39m(sql[33m,[39m params)[33m;[39m[0m
+
+      at Object.execute [as getUserBalance] (src/repositories/billing.repo.ts:132:38)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:281:46)
+
+  ● BillingRepository › getUserBalance › should return null when user not found with connection
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 130 |[39m     
+     [90m 131 |[39m     [36mif[39m (conn) {
+    [31m[1m>[22m[39m[90m 132 |[39m       [36mconst[39m [rows][33m:[39m any [33m=[39m [36mawait[39m conn[33m.[39mexecute(sql[33m,[39m params)[33m;[39m
+     [90m     |[39m                                      [31m[1m^[22m[39m
+     [90m 133 |[39m       [36mreturn[39m rows[[35m0[39m][33m?[39m[33m.[39mcredit [33m?[39m[33m?[39m [36mnull[39m[33m;[39m
+     [90m 134 |[39m     }
+     [90m 135 |[39m     [36mconst[39m result [33m=[39m [36mawait[39m querySingle[33m<[39m{ credit[33m:[39m number }[33m>[39m(sql[33m,[39m params)[33m;[39m[0m
+
+      at Object.execute [as getUserBalance] (src/repositories/billing.repo.ts:132:38)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:294:46)
+
+  ● BillingRepository › lockUserForUpdate › should lock user row for update
+
+    TypeError: conn.execute is not a function
+
+    [0m [90m 138 |[39m
+     [90m 139 |[39m   [36masync[39m lockUserForUpdate(userId[33m:[39m string[33m,[39m conn[33m:[39m [33mPoolConnection[39m)[33m:[39m [33mPromise[39m[33m<[39m[36mvoid[39m[33m>[39m {
+    [31m[1m>[22m[39m[90m 140 |[39m     [36mawait[39m conn[33m.[39mexecute([32m'SELECT credit FROM users WHERE id = ? FOR UPDATE'[39m[33m,[39m [userId])[33m;[39m
+     [90m     |[39m                [31m[1m^[22m[39m
+     [90m 141 |[39m   }
+     [90m 142 |[39m }[33m;[39m
+     [90m 143 |[39m[0m
+
+      at Object.execute [as lockUserForUpdate] (src/repositories/billing.repo.ts:140:16)
+      at Object.<anonymous> (src/repositories/__tests__/billing.repo.test.ts:302:31)
+
+FAIL src/hooks/__tests__/useChatActions.test.tsx
+  useChatActions
+    handleLoadConversation
+      × should load conversation and update store on success (43 ms)
+      × should handle API error gracefully (8 ms)
+      × should handle fetch exception (9 ms)
+    handleDeleteConversation
+      √ should delete conversation from server and store on success (212 ms)
+      √ should show error toast on failure (29 ms)
+      √ should handle connection error (9 ms)
+    handleEditConfirm
+      × should edit message and send new content (9 ms)
+      × should not edit if message not found (5 ms)
+      × should not edit if currently generating (10 ms)
+    handleRegenerate
+      × should regenerate last assistant response (7 ms)
+      × should not regenerate if no assistant message found (7 ms)
+      × should not regenerate if currently generating (8 ms)
+    deductCredit
+      √ should deduct credit successfully and update store (17 ms)
+      √ should not deduct if amount is zero or negative (4 ms)
+      √ should handle deduction failure and show error toast (5 ms)
+      √ should handle network error (4 ms)
+    addCredit
+      √ should add credit successfully and update store (5 ms)
+      √ should not add if amount is zero or negative (2 ms)
+      √ should handle topup failure and show error toast (6 ms)
+    addUsageLog
+      √ should add usage log successfully and update store (7 ms)
+      √ should not add duplicate usage logs (6 ms)
+      √ should handle usage log failure (10 ms)
+    addCreditLog
+      √ should add credit log successfully and update store (12 ms)
+      √ should not add duplicate credit logs (7 ms)
+      √ should handle credit log failure (6 ms)
+
+  ● useChatActions › handleLoadConversation › should load conversation and update store on success
+
+    TypeError: Cannot destructure property 'setMessages' of '((cov_7ovktx2dt(...).s[8]++) , store_1.useChatStore.getState(...))' as it is undefined.
+
+    [0m [90m 36 |[39m   [36mconst[39m handleLoadConversation [33m=[39m useCallback(
+     [90m 37 |[39m     [36masync[39m (id[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 38 |[39m       [36mconst[39m { setMessages[33m,[39m setActiveCategory } [33m=[39m useChatStore[33m.[39mgetState()[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 39 |[39m       [36mtry[39m {
+     [90m 40 |[39m         [36mconst[39m res [33m=[39m [36mawait[39m fetch([32m`/api/conversations/${id}`[39m)[33m;[39m
+     [90m 41 |[39m         [36mif[39m (res[33m.[39mok) {[0m
+
+      at Object.setMessages [as handleLoadConversation] (src/hooks/useChatActions.ts:38:15)
+      at src/hooks/__tests__/useChatActions.test.tsx:80:30
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:79:16)
+
+  ● useChatActions › handleLoadConversation › should handle API error gracefully
+
+    TypeError: Cannot destructure property 'setMessages' of '((cov_7ovktx2dt(...).s[8]++) , store_1.useChatStore.getState(...))' as it is undefined.
+
+    [0m [90m 36 |[39m   [36mconst[39m handleLoadConversation [33m=[39m useCallback(
+     [90m 37 |[39m     [36masync[39m (id[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 38 |[39m       [36mconst[39m { setMessages[33m,[39m setActiveCategory } [33m=[39m useChatStore[33m.[39mgetState()[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 39 |[39m       [36mtry[39m {
+     [90m 40 |[39m         [36mconst[39m res [33m=[39m [36mawait[39m fetch([32m`/api/conversations/${id}`[39m)[33m;[39m
+     [90m 41 |[39m         [36mif[39m (res[33m.[39mok) {[0m
+
+      at Object.setMessages [as handleLoadConversation] (src/hooks/useChatActions.ts:38:15)
+      at src/hooks/__tests__/useChatActions.test.tsx:95:30
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:94:16)
+
+  ● useChatActions › handleLoadConversation › should handle fetch exception
+
+    TypeError: Cannot destructure property 'setMessages' of '((cov_7ovktx2dt(...).s[8]++) , store_1.useChatStore.getState(...))' as it is undefined.
+
+    [0m [90m 36 |[39m   [36mconst[39m handleLoadConversation [33m=[39m useCallback(
+     [90m 37 |[39m     [36masync[39m (id[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 38 |[39m       [36mconst[39m { setMessages[33m,[39m setActiveCategory } [33m=[39m useChatStore[33m.[39mgetState()[33m;[39m
+     [90m    |[39m               [31m[1m^[22m[39m
+     [90m 39 |[39m       [36mtry[39m {
+     [90m 40 |[39m         [36mconst[39m res [33m=[39m [36mawait[39m fetch([32m`/api/conversations/${id}`[39m)[33m;[39m
+     [90m 41 |[39m         [36mif[39m (res[33m.[39mok) {[0m
+
+      at Object.setMessages [as handleLoadConversation] (src/hooks/useChatActions.ts:38:15)
+      at src/hooks/__tests__/useChatActions.test.tsx:107:30
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:106:16)
+
+  ● useChatActions › handleEditConfirm › should edit message and send new content
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 86 |[39m   [36mconst[39m handleEditConfirm [33m=[39m useCallback(
+     [90m 87 |[39m     (messageId[33m:[39m string[33m,[39m newContent[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m       [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 91 |[39m       [36mconst[39m editIndex [33m=[39m currentMessages[33m.[39mfindIndex((m) [33m=>[39m m[33m.[39mid [33m===[39m messageId)[33m;[39m[0m
+
+      at Object.handleEditConfirm (src/hooks/useChatActions.ts:88:34)
+      at src/hooks/__tests__/useChatActions.test.tsx:188:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:187:16)
+
+  ● useChatActions › handleEditConfirm › should not edit if message not found
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 86 |[39m   [36mconst[39m handleEditConfirm [33m=[39m useCallback(
+     [90m 87 |[39m     (messageId[33m:[39m string[33m,[39m newContent[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m       [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 91 |[39m       [36mconst[39m editIndex [33m=[39m currentMessages[33m.[39mfindIndex((m) [33m=>[39m m[33m.[39mid [33m===[39m messageId)[33m;[39m[0m
+
+      at Object.handleEditConfirm (src/hooks/useChatActions.ts:88:34)
+      at src/hooks/__tests__/useChatActions.test.tsx:212:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:211:16)
+
+  ● useChatActions › handleEditConfirm › should not edit if currently generating
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 86 |[39m   [36mconst[39m handleEditConfirm [33m=[39m useCallback(
+     [90m 87 |[39m     (messageId[33m:[39m string[33m,[39m newContent[33m:[39m string) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 88 |[39m       [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m    |[39m                                  [31m[1m^[22m[39m
+     [90m 89 |[39m
+     [90m 90 |[39m       [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 91 |[39m       [36mconst[39m editIndex [33m=[39m currentMessages[33m.[39mfindIndex((m) [33m=>[39m m[33m.[39mid [33m===[39m messageId)[33m;[39m[0m
+
+      at Object.handleEditConfirm (src/hooks/useChatActions.ts:88:34)
+      at src/hooks/__tests__/useChatActions.test.tsx:230:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:229:16)
+
+  ● useChatActions › handleRegenerate › should regenerate last assistant response
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 103 |[39m
+     [90m 104 |[39m   [36mconst[39m handleRegenerate [33m=[39m useCallback(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m     [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m     |[39m                                [31m[1m^[22m[39m
+     [90m 106 |[39m     [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 107 |[39m
+     [90m 108 |[39m     [36mlet[39m lastAssistantIdx [33m=[39m [33m-[39m[35m1[39m[33m;[39m[0m
+
+      at Object.handleRegenerate (src/hooks/useChatActions.ts:105:32)
+      at src/hooks/__tests__/useChatActions.test.tsx:256:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:255:16)
+
+  ● useChatActions › handleRegenerate › should not regenerate if no assistant message found
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 103 |[39m
+     [90m 104 |[39m   [36mconst[39m handleRegenerate [33m=[39m useCallback(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m     [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m     |[39m                                [31m[1m^[22m[39m
+     [90m 106 |[39m     [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 107 |[39m
+     [90m 108 |[39m     [36mlet[39m lastAssistantIdx [33m=[39m [33m-[39m[35m1[39m[33m;[39m[0m
+
+      at Object.handleRegenerate (src/hooks/useChatActions.ts:105:32)
+      at src/hooks/__tests__/useChatActions.test.tsx:282:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:281:16)
+
+  ● useChatActions › handleRegenerate › should not regenerate if currently generating
+
+    TypeError: Cannot read properties of undefined (reading 'isGenerating')
+
+    [0m [90m 103 |[39m
+     [90m 104 |[39m   [36mconst[39m handleRegenerate [33m=[39m useCallback(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 105 |[39m     [36mif[39m (useChatStore[33m.[39mgetState()[33m.[39misGenerating) [36mreturn[39m[33m;[39m
+     [90m     |[39m                                [31m[1m^[22m[39m
+     [90m 106 |[39m     [36mconst[39m currentMessages [33m=[39m useChatStore[33m.[39mgetState()[33m.[39mmessages[33m;[39m
+     [90m 107 |[39m
+     [90m 108 |[39m     [36mlet[39m lastAssistantIdx [33m=[39m [33m-[39m[35m1[39m[33m;[39m[0m
+
+      at Object.handleRegenerate (src/hooks/useChatActions.ts:105:32)
+      at src/hooks/__tests__/useChatActions.test.tsx:304:24
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:47:24
+      at process.env.NODE_ENV.exports.act (node_modules/.pnpm/react@19.2.4/node_modules/react/cjs/react.development.js:814:22)
+      at node_modules/.pnpm/@testing-library+react@16.3_893f466751a7d66081fd06e9edb9241a/node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at Object.<anonymous> (src/hooks/__tests__/useChatActions.test.tsx:303:16)
+
+FAIL src/repositories/__tests__/analytics.repo.test.ts
+  AnalyticsRepository
+    getTotalUsers
+      × should get total user count (5 ms)
+      √ should return 0 when no users (2 ms)
+    getNewUsersStats
+      × should get new users stats for 24h and 7d (11 ms)
+      √ should handle null/undefined values (2 ms)
+    getConversationAndMessageCounts
+      × should get total conversations and messages (2 ms)
+    getRevenueStats
+      × should get total revenue from topups (1 ms)
+      √ should return 0 when no revenue (1 ms)
+    getProfitStats
+      × should calculate profit (revenue - costs) (1 ms)
+      √ should return 0 profit when no data (3 ms)
+    getActiveUsers
+      × should get active users count for given interval (2 ms)
+      × should handle different intervals (1 ms)
+    getUsageSummary
+      × should get usage summary for interval (1 ms)
+      √ should return zeros when no usage (1 ms)
+    getRequestsPerModel
+      × should get requests grouped by model (2 ms)
+      √ should handle empty result (1 ms)
+    getTokenByProvider
+      × should get token usage grouped by provider (6 ms)
+    getUsageOverTime
+      × should get usage over time with custom grouping (2 ms)
+    getTopUsers
+      × should get top 10 users by total spent (2 ms)
+      × should limit to 10 users (1 ms)
+    getModelCounts
+      × should get total and active model counts (1 ms)
+    getNewUsersOverTime
+      × should get new users over time with custom grouping (3 ms)
+      × should replace "as time" with "as date" in selectExpr (2 ms)
+
+  ● AnalyticsRepository › getTotalUsers › should get total user count
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "SELECT COUNT(*) as total FROM users", []
+    Received: "SELECT COUNT(*) as total FROM users"
+
+    Number of calls: 1
+
+    [0m [90m 18 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetTotalUsers()[33m;[39m
+     [90m 19 |[39m
+    [31m[1m>[22m[39m[90m 20 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 21 |[39m         [32m'SELECT COUNT(*) as total FROM users'[39m[33m,[39m
+     [90m 22 |[39m         []
+     [90m 23 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:20:27)
+
+  ● AnalyticsRepository › getNewUsersStats › should get new users stats for 24h and 7d
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            SUM(CASE WHEN created_at >= NOW() - INTERVAL 1 DAY THEN 1 ELSE 0 END) as new_users_24h,
+            SUM(CASE WHEN created_at >= NOW() - INTERVAL 7 DAY THEN 1 ELSE 0 END) as new_users_7d
+          FROM users"
+
+    Number of calls: 1
+
+    [0m [90m 43 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetNewUsersStats()[33m;[39m
+     [90m 44 |[39m
+    [31m[1m>[22m[39m[90m 45 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 46 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 47 |[39m         []
+     [90m 48 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:45:27)
+
+  ● AnalyticsRepository › getConversationAndMessageCounts › should get total conversations and messages
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            (SELECT COUNT(*) FROM conversations) as total_conversations,
+            (SELECT COUNT(*) FROM messages) as total_messages"
+
+    Number of calls: 1
+
+    [0m [90m 72 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetConversationAndMessageCounts()[33m;[39m
+     [90m 73 |[39m
+    [31m[1m>[22m[39m[90m 74 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 75 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 76 |[39m         []
+     [90m 77 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:74:27)
+
+  ● AnalyticsRepository › getRevenueStats › should get total revenue from topups
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "SELECT COALESCE(SUM(amount), 0) as total FROM credit_logs WHERE type = 'topup'", []
+    Received: "SELECT COALESCE(SUM(amount), 0) as total FROM credit_logs WHERE type = 'topup'"
+
+    Number of calls: 1
+
+    [0m [90m 89 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetRevenueStats()[33m;[39m
+     [90m 90 |[39m
+    [31m[1m>[22m[39m[90m 91 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m    |[39m                           [31m[1m^[22m[39m
+     [90m 92 |[39m         [32m"SELECT COALESCE(SUM(amount), 0) as total FROM credit_logs WHERE type = 'topup'"[39m[33m,[39m
+     [90m 93 |[39m         []
+     [90m 94 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:91:27)
+
+  ● AnalyticsRepository › getProfitStats › should calculate profit (revenue - costs)
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            COALESCE((SELECT SUM(amount) FROM credit_logs WHERE type='topup'), 0) -
+            COALESCE((SELECT SUM(total_cost) FROM usage_logs), 0) as profit"
+
+    Number of calls: 1
+
+    [0m [90m 111 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetProfitStats()[33m;[39m
+     [90m 112 |[39m
+    [31m[1m>[22m[39m[90m 113 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 114 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 115 |[39m         []
+     [90m 116 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:113:27)
+
+  ● AnalyticsRepository › getActiveUsers › should get active users count for given interval
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 7 DAY", []
+    Received: "SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 7 DAY"
+
+    Number of calls: 1
+
+    [0m [90m 133 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetActiveUsers([32m'NOW() - INTERVAL 7 DAY'[39m)[33m;[39m
+     [90m 134 |[39m
+    [31m[1m>[22m[39m[90m 135 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 136 |[39m         [32m"SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 7 DAY"[39m[33m,[39m
+     [90m 137 |[39m         []
+     [90m 138 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:135:27)
+
+  ● AnalyticsRepository › getActiveUsers › should handle different intervals
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 1 DAY", []
+    Received: "SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 1 DAY"
+
+    Number of calls: 1
+
+    [0m [90m 143 |[39m       [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetActiveUsers([32m'NOW() - INTERVAL 1 DAY'[39m)[33m;[39m
+     [90m 144 |[39m
+    [31m[1m>[22m[39m[90m 145 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 146 |[39m         [32m"SELECT COUNT(DISTINCT user_id) as active FROM usage_logs WHERE created_at >= NOW() - INTERVAL 1 DAY"[39m[33m,[39m
+     [90m 147 |[39m         []
+     [90m 148 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:145:27)
+
+  ● AnalyticsRepository › getUsageSummary › should get usage summary for interval
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            COUNT(*) as total_requests,
+            COALESCE(SUM(input_tokens + output_tokens), 0) as total_tokens,
+            COALESCE(SUM(total_cost), 0) as total_cost
+          FROM usage_logs
+          WHERE created_at >= NOW() - INTERVAL 7 DAY"
+
+    Number of calls: 1
+
+    [0m [90m 160 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetUsageSummary([32m'NOW() - INTERVAL 7 DAY'[39m)[33m;[39m
+     [90m 161 |[39m
+    [31m[1m>[22m[39m[90m 162 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 163 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 164 |[39m         []
+     [90m 165 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:162:27)
+
+  ● AnalyticsRepository › getRequestsPerModel › should get requests grouped by model
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT model_name as name, COUNT(*) as requests", []
+    Received: "SELECT model_name as name, COUNT(*) as requests
+          FROM usage_logs
+          WHERE created_at >= NOW() - INTERVAL 7 DAY
+          GROUP BY model_name
+          ORDER BY requests DESC"
+
+    Number of calls: 1
+
+    [0m [90m 198 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetRequestsPerModel([32m'NOW() - INTERVAL 7 DAY'[39m)[33m;[39m
+     [90m 199 |[39m
+    [31m[1m>[22m[39m[90m 200 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 201 |[39m         expect[33m.[39mstringContaining([32m'SELECT model_name as name, COUNT(*) as requests'[39m)[33m,[39m
+     [90m 202 |[39m         []
+     [90m 203 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:200:21)
+
+  ● AnalyticsRepository › getTokenByProvider › should get token usage grouped by provider
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT provider, SUM(input_tokens + output_tokens) as value", []
+    Received: "SELECT provider, SUM(input_tokens + output_tokens) as value
+          FROM usage_logs
+          WHERE created_at >= NOW() - INTERVAL 7 DAY
+          GROUP BY provider"
+
+    Number of calls: 1
+
+    [0m [90m 224 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetTokenByProvider([32m'NOW() - INTERVAL 7 DAY'[39m)[33m;[39m
+     [90m 225 |[39m
+    [31m[1m>[22m[39m[90m 226 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 227 |[39m         expect[33m.[39mstringContaining([32m'SELECT provider, SUM(input_tokens + output_tokens) as value'[39m)[33m,[39m
+     [90m 228 |[39m         []
+     [90m 229 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:226:21)
+
+  ● AnalyticsRepository › getUsageOverTime › should get usage over time with custom grouping
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT DATE(created_at) as time, SUM(input_tokens + output_tokens) as tokens", []
+    Received: "SELECT DATE(created_at) as time, SUM(input_tokens + output_tokens) as tokens
+          FROM usage_logs
+          WHERE created_at >= NOW() - INTERVAL 7 DAY
+          GROUP BY DATE(created_at)
+          ORDER BY time"
+
+    Number of calls: 1
+
+    [0m [90m 245 |[39m       )[33m;[39m
+     [90m 246 |[39m
+    [31m[1m>[22m[39m[90m 247 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 248 |[39m         expect[33m.[39mstringContaining([32m'SELECT DATE(created_at) as time, SUM(input_tokens + output_tokens) as tokens'[39m)[33m,[39m
+     [90m 249 |[39m         []
+     [90m 250 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:247:21)
+
+  ● AnalyticsRepository › getTopUsers › should get top 10 users by total spent
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            u.name, u.email, u.total_spent, u.credit,
+            (SELECT COUNT(*) FROM usage_logs ul WHERE ul.user_id = u.id AND ul.created_at >= NOW() - INTERVAL 30 DAY) as request_count
+          FROM users u
+          ORDER BY u.total_spent DESC
+          LIMIT 10"
+
+    Number of calls: 1
+
+    [0m [90m 268 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetTopUsers([32m'NOW() - INTERVAL 30 DAY'[39m)[33m;[39m
+     [90m 269 |[39m
+    [31m[1m>[22m[39m[90m 270 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 271 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 272 |[39m         []
+     [90m 273 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:270:21)
+
+  ● AnalyticsRepository › getTopUsers › should limit to 10 users
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "LIMIT 10", []
+    Received: "SELECT
+            u.name, u.email, u.total_spent, u.credit,
+            (SELECT COUNT(*) FROM usage_logs ul WHERE ul.user_id = u.id AND ul.created_at >= NOW() - INTERVAL 7 DAY) as request_count
+          FROM users u
+          ORDER BY u.total_spent DESC
+          LIMIT 10"
+
+    Number of calls: 1
+
+    [0m [90m 281 |[39m       [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetTopUsers([32m'NOW() - INTERVAL 7 DAY'[39m)[33m;[39m
+     [90m 282 |[39m
+    [31m[1m>[22m[39m[90m 283 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 284 |[39m         expect[33m.[39mstringContaining([32m'LIMIT 10'[39m)[33m,[39m
+     [90m 285 |[39m         []
+     [90m 286 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:283:21)
+
+  ● AnalyticsRepository › getModelCounts › should get total and active model counts
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT", []
+    Received: "SELECT
+            (SELECT COUNT(*) FROM models) as total_models,
+            (SELECT COUNT(*) FROM models WHERE status='active') as active_models"
+
+    Number of calls: 1
+
+    [0m [90m 297 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mAnalyticsRepository[39m[33m.[39mgetModelCounts()[33m;[39m
+     [90m 298 |[39m
+    [31m[1m>[22m[39m[90m 299 |[39m       expect(querySingle)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                           [31m[1m^[22m[39m
+     [90m 300 |[39m         expect[33m.[39mstringContaining([32m'SELECT'[39m)[33m,[39m
+     [90m 301 |[39m         []
+     [90m 302 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:299:27)
+
+  ● AnalyticsRepository › getNewUsersOverTime › should get new users over time with custom grouping
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT DATE(created_at) as date, COUNT(*) as count", []
+    Received: "SELECT DATE(created_at) as date, COUNT(*) as count
+          FROM users
+          WHERE created_at >= NOW() - INTERVAL 30 DAY
+          GROUP BY DATE(created_at)
+          ORDER BY date"
+
+    Number of calls: 1
+
+    [0m [90m 321 |[39m       )[33m;[39m
+     [90m 322 |[39m
+    [31m[1m>[22m[39m[90m 323 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 324 |[39m         expect[33m.[39mstringContaining([32m'SELECT DATE(created_at) as date, COUNT(*) as count'[39m)[33m,[39m
+     [90m 325 |[39m         []
+     [90m 326 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:323:21)
+
+  ● AnalyticsRepository › getNewUsersOverTime › should replace "as time" with "as date" in selectExpr
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringContaining "SELECT WEEK(created_at) as date", []
+    Received: "SELECT WEEK(created_at) as date, COUNT(*) as count
+          FROM users
+          WHERE created_at >= NOW() - INTERVAL 7 DAY
+          GROUP BY WEEK(created_at)
+          ORDER BY date"
+
+    Number of calls: 1
+
+    [0m [90m 336 |[39m       )[33m;[39m
+     [90m 337 |[39m
+    [31m[1m>[22m[39m[90m 338 |[39m       expect(query)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 339 |[39m         expect[33m.[39mstringContaining([32m'SELECT WEEK(created_at) as date'[39m)[33m,[39m
+     [90m 340 |[39m         []
+     [90m 341 |[39m       )[33m;[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/analytics.repo.test.ts:338:21)
+
+FAIL src/hooks/__tests__/useChatStream.test.tsx
+  ● Test suite failed to run
+
+    Cannot find module './useChatActions' from 'src/hooks/__tests__/useChatStream.test.tsx'
+
+    [0m [90m  7 |[39m [90m// Mock dependencies[39m
+     [90m  8 |[39m jest[33m.[39mmock([32m'@/lib/store'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m  9 |[39m jest[33m.[39mmock([32m'./useChatActions'[39m)[33m;[39m
+     [90m    |[39m      [31m[1m^[22m[39m
+     [90m 10 |[39m jest[33m.[39mmock([32m'@/hooks/use-toast'[39m)[33m;[39m
+     [90m 11 |[39m
+     [90m 12 |[39m [36mconst[39m mockUseChatStore [33m=[39m useChatStore [36mas[39m jest[33m.[39m[33mMockedFunction[39m[33m<[39m[36mtypeof[39m useChatStore[33m>[39m[33m;[39m[0m
+
+      at Resolver._throwModNotFoundError (node_modules/.pnpm/jest-resolve@30.4.1/node_modules/jest-resolve/build/index.js:895:11)
+      at Object.<anonymous> (src/hooks/__tests__/useChatStream.test.tsx:9:6)
+
+FAIL src/repositories/__tests__/chat.repo.test.ts
+  ChatRepository
+    createConversation
+      √ should create conversation and return it (6 ms)
+      √ should throw error if conversation creation fails (16 ms)
+    getConversationsByUserId
+      × should return conversations with last message (39 ms)
+    findConversationById
+      √ should find conversation by id (2 ms)
+      √ should return null if not found (5 ms)
+    saveMessage
+      √ should save message and return it (2 ms)
+      √ should throw error if save fails (2 ms)
+    getMessagesByConvId
+      √ should return messages for conversation (1 ms)
+    findMessagesByConversationId
+      √ should delegate to getMessagesByConvId (1 ms)
+    deleteConversation
+      √ should delete conversation
+    updateConversationTitle
+      √ should update conversation title (1 ms)
+    updateConversationUpdatedAt
+      √ should update updated_at timestamp
+    saveUsageLog
+      √ should save usage log (2 ms)
+
+  ● ChatRepository › getConversationsByUserId › should return conversations with last message
+
+    expect(received).toEqual(expected) // deep equality
+
+    Expected: [{"category": "assistant", "created_at": 2026-05-19T16:31:24.611Z, "id": "conv-1", "last_message": {"content": "Hello", "created_at": 2026-05-19T16:31:24.611Z, "id": "msg-1", "role": "user"}, "model": "gpt-4o", "pinned": 1, "title": "Chat 1", "updated_at": 2026-05-19T16:31:24.611Z, "user_id": "user-123"}]
+    Received: undefined
+
+    [0m [90m 82 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m [33mChatRepository[39m[33m.[39mgetConversationsByUserId(userId)[33m;[39m
+     [90m 83 |[39m
+    [31m[1m>[22m[39m[90m 84 |[39m       expect(result)[33m.[39mtoEqual(mockConversations)[33m;[39m
+     [90m    |[39m                      [31m[1m^[22m[39m
+     [90m 85 |[39m     })[33m;[39m
+     [90m 86 |[39m   })[33m;[39m
+     [90m 87 |[39m[0m
+
+      at Object.<anonymous> (src/repositories/__tests__/chat.repo.test.ts:84:22)
+
+PASS src/repositories/__tests__/user.repo.test.ts
+  UserRepository
+    findById
+      √ should find user by id (3 ms)
+      √ should return null if user not found (1 ms)
+    findByEmail
+      √ should find user by email (2 ms)
+      √ should return null if user not found (1 ms)
+    create
+      √ should create user with connection (1 ms)
+      √ should create user without connection (1 ms)
+      √ should throw error if user creation fails (11 ms)
+    updateCredit
+      √ should update credit with connection (1 ms)
+      √ should update credit without connection (1 ms)
+    updateRole
+      √ should update user role (2 ms)
+    listUsers
+      √ should list users with pagination and search (11 ms)
+      √ should handle empty search (1 ms)
+    deleteUser
+      √ should delete user with connection (2 ms)
+      √ should delete user without connection
+
+PASS src/services/__tests__/chat-persistence.service.test.ts
+  ChatPersistenceService
+    getUserConversations
+      √ should return formatted conversations for a user (2 ms)
+      √ should handle empty conversations array (1 ms)
+    createConversation
+      √ should create a new conversation with default values (1 ms)
+      √ should create conversation with custom values
+    getConversationDetails
+      √ should return conversation with messages (2 ms)
+      √ should return null if conversation not found
+    deleteConversation
+      √ should delete a conversation (1 ms)
+    saveMessage
+      √ should save a message successfully (1 ms)
+    updateConversationTitle
+      √ should update conversation title (1 ms)
+    updateConversationUpdatedAt
+      √ should update conversation updated_at timestamp
+    ensureConversation
+      √ should create new conversation if id not provided
+      √ should use existing conversation if found
+      √ should truncate long messages for title (1 ms)
+
+  console.error
+    Session initialization error: Error: Network error
+        at Object.<anonymous> (D:\Project\webchat AI\ai-chat-web\src\hooks\__tests__\useAuthSession.test.tsx:100:50)
+        at Promise.finally.completed (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+        at _callCircusTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+        at _runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+        at D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at _runTestsForDescribeBlock (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+        at run (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+        at runAndTransformResultsToJestFormat (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+        at jestAdapter (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-circus@30.4.2\node_modules\jest-circus\build\runner.js:111:19)
+        at runTestInternal (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:276:16)
+        at runTest (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:344:7)
+        at Object.worker (D:\Project\webchat AI\ai-chat-web\node_modules\.pnpm\jest-runner@30.4.2\node_modules\jest-runner\build\testWorker.js:498:12)
+
+    [0m [90m 53 |[39m       [36mreturn[39m[33m;[39m
+     [90m 54 |[39m     }
+    [31m[1m>[22m[39m[90m 55 |[39m     originalError[33m.[39mcall(console[33m,[39m [33m...[39margs)[33m;[39m
+     [90m    |[39m                   [31m[1m^[22m[39m
+     [90m 56 |[39m   }[33m;[39m
+     [90m 57 |[39m })[33m;[39m
+     [90m 58 |[39m[0m
+
+      at console.error (jest.setup.js:55:19)
+      at error (src/hooks/useAuthSession.ts:34:17)
+
+FAIL src/hooks/__tests__/useAuthSession.test.tsx (10.881 s)
+  useAuthSession
+    session initialization
+      × should initialize session successfully on mount (1059 ms)
+      × should handle nested response structure (1007 ms)
+      √ should logout when session invalid (78 ms)
+      √ should logout on fetch error (76 ms)
+    server data fetching
+      × should fetch conversations, account data, and usage logs when logged in (1016 ms)
+      √ should not fetch data when not logged in (15 ms)
+      × should handle failed conversations fetch gracefully (1011 ms)
+      × should handle failed account fetch gracefully (1016 ms)
+      × should handle failed usage logs fetch gracefully (1014 ms)
+      × should cancel pending requests on unmount (1016 ms)
+    loading state
+      × should show loading while fetching server data (1013 ms)
+    edge cases
+      × should handle missing user data in response (16 ms)
+      √ should handle null credit and totalSpent (75 ms)
+      × should handle empty conversations array (1016 ms)
+
+  ● useAuthSession › session initialization › should initialize session successfully on mount
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 50 |[39m
+     [90m 51 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 52 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m    |[39m                                           [31m[1m^[22m[39m
+     [90m 53 |[39m       })[33m;[39m
+     [90m 54 |[39m
+     [90m 55 |[39m       expect(global[33m.[39mfetch)[33m.[39mtoHaveBeenCalledWith([32m'/api/auth/me'[39m)[33m;[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:52:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › session initialization › should handle nested response structure
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 78 |[39m
+     [90m 79 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 80 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m    |[39m                                           [31m[1m^[22m[39m
+     [90m 81 |[39m       })[33m;[39m
+     [90m 82 |[39m
+     [90m 83 |[39m       expect(mockLogin)[33m.[39mtoHaveBeenCalledWith(mockUser)[33m;[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:80:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › server data fetching › should fetch conversations, account data, and usage logs when logged in
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 161 |[39m       [90m// Wait for login to complete[39m
+     [90m 162 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 163 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 164 |[39m       })[33m;[39m
+     [90m 165 |[39m
+     [90m 166 |[39m       [90m// Wait for data fetching to complete[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:163:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › server data fetching › should handle failed conversations fetch gracefully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 234 |[39m
+     [90m 235 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 236 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 237 |[39m       })[33m;[39m
+     [90m 238 |[39m
+     [90m 239 |[39m       [90m// Should continue despite conversation fetch failure[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:236:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › server data fetching › should handle failed account fetch gracefully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 278 |[39m
+     [90m 279 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 280 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 281 |[39m       })[33m;[39m
+     [90m 282 |[39m
+     [90m 283 |[39m       [90m// Should continue despite account fetch failure[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:280:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › server data fetching › should handle failed usage logs fetch gracefully
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 322 |[39m
+     [90m 323 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 324 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 325 |[39m       })[33m;[39m
+     [90m 326 |[39m
+     [90m 327 |[39m       [90m// Should continue despite usage logs fetch failure[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:324:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › server data fetching › should cancel pending requests on unmount
+
+    ReferenceError: result is not defined
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 352 |[39m
+     [90m 353 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 354 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                [31m[1m^[22m[39m
+     [90m 355 |[39m       })[33m;[39m
+     [90m 356 |[39m
+     [90m 357 |[39m       unmount()[33m;[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:354:16
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › loading state › should show loading while fetching server data
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 385 |[39m
+     [90m 386 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 387 |[39m         expect(result[33m.[39mcurrent[33m.[39misLoggedIn)[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m     |[39m                                           [31m[1m^[22m[39m
+     [90m 388 |[39m       })[33m;[39m
+     [90m 389 |[39m
+     [90m 390 |[39m       [90m// Initially loading should be true[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:387:43
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+  ● useAuthSession › edge cases › should handle missing user data in response
+
+    expect(jest.fn()).not.toHaveBeenCalled()
+
+    Expected number of calls: 0
+    Received number of calls: 1
+
+    1: {}
+
+    [0m [90m 416 |[39m       })[33m;[39m
+     [90m 417 |[39m
+    [31m[1m>[22m[39m[90m 418 |[39m       expect(mockLogin)[33m.[39mnot[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                             [31m[1m^[22m[39m
+     [90m 419 |[39m     })[33m;[39m
+     [90m 420 |[39m
+     [90m 421 |[39m     it([32m'should handle null credit and totalSpent'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at Object.<anonymous> (src/hooks/__tests__/useAuthSession.test.tsx:418:29)
+
+  ● useAuthSession › edge cases › should handle empty conversations array
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: []
+
+    Number of calls: 0
+
+    Ignored nodes: comments, script, style
+    [36m<html>[39m
+      [36m<head />[39m
+      [36m<body>[39m
+        [36m<div />[39m
+      [36m</body>[39m
+    [36m</html>[39m
+
+    [0m [90m 479 |[39m
+     [90m 480 |[39m       [36mawait[39m waitFor(() [33m=>[39m {
+    [31m[1m>[22m[39m[90m 481 |[39m         expect(mockSetConversations)[33m.[39mtoHaveBeenCalledWith([])[33m;[39m
+     [90m     |[39m                                      [31m[1m^[22m[39m
+     [90m 482 |[39m       })[33m;[39m
+     [90m 483 |[39m     })[33m;[39m
+     [90m 484 |[39m   })[33m;[39m[0m
+
+      at src/hooks/__tests__/useAuthSession.test.tsx:481:38
+      at runWithExpensiveErrorDiagnosticsDisabled (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12)
+      at checkCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77)
+      at checkRealTimersCallback (node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16)
+      at Timeout.task [as _onTimeout] (node_modules/.pnpm/jsdom@26.1.0/node_modules/jsdom/lib/jsdom/browser/Window.js:579:19)
+
+---------------------------------|---------|----------|---------|---------|----------------------------
+File                             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s          
+---------------------------------|---------|----------|---------|---------|----------------------------
+All files                        |    32.7 |    22.54 |    44.9 |   33.46 |                            
+ hooks                           |   18.16 |     13.3 |   17.89 |   18.02 |                            
+  use-auto-scroll.ts             |       0 |        0 |       0 |       0 | 1-9                        
+  use-mobile.ts                  |       0 |      100 |       0 |       0 | 1-25                       
+  use-mounted.ts                 |       0 |      100 |       0 |       0 | 3-18                       
+  use-toast.ts                   |   22.41 |        0 |       0 |   20.37 | 33-34,62-74,78-127,137-190 
+  use-websocket.ts               |       0 |      100 |       0 |       0 | 3-10                       
+  useAdminAnalytics.ts           |       0 |        0 |       0 |       0 | 3-98                       
+  useAdminModels.ts              |       0 |        0 |       0 |       0 | 3-136                      
+  useAdminUsers.ts               |       0 |        0 |       0 |       0 | 3-71                       
+  useAuthSession.ts              |   40.74 |    44.23 |   66.66 |   41.17 | 47-99                      
+  useChatActions.ts              |   67.13 |    48.61 |   68.42 |   71.42 | 39-51,90-98,106-134        
+  useChatStream.ts               |       0 |        0 |       0 |       0 | 3-715                      
+ repositories                    |   94.23 |    80.35 |   97.95 |   94.03 |                            
+  analytics.repo.ts              |     100 |      100 |     100 |     100 |                            
+  billing.repo.ts                |      90 |    78.94 |     100 |   89.83 | 33,46,49-50,100,133        
+  chat.repo.ts                   |     100 |      100 |     100 |     100 |                            
+  model.repo.ts                  |   93.93 |       75 |      90 |   93.75 | 72-73                      
+  user.repo.ts                   |   96.15 |    83.33 |     100 |      96 | 49                         
+ services                        |   34.46 |    17.69 |   44.44 |   36.28 |                            
+  admin.service.ts               |       0 |        0 |       0 |       0 | 2-79                       
+  analytics.service.ts           |       0 |        0 |       0 |       0 | 2-115                      
+  auth.service.ts                |   96.77 |      100 |   83.33 |   96.77 | 24                         
+  billing.service.ts             |   93.33 |    72.22 |     100 |   97.61 | 61                         
+  chat-orchestrator.service.ts   |   15.81 |     8.65 |      20 |   16.92 | 63-79,98-100,195-546       
+  chat-persistence.service.ts    |     100 |       85 |     100 |     100 | 13-15                      
+  chat-usage-tracking.service.ts |     100 |    96.42 |     100 |     100 | 36                         
+  chat-web-search.service.ts     |   22.22 |        0 |       0 |   22.22 | 9-41                       
+  chat.service.ts                |       0 |      100 |       0 |       0 | 2-50                       
+  model.service.ts               |       0 |        0 |       0 |       0 | 2-132                      
+  notification.service.ts        |    9.09 |        0 |       0 |    9.09 | 9-29                       
+---------------------------------|---------|----------|---------|---------|----------------------------
+Jest: Coverage for statements (32.7%) does not meet "global" threshold (70%)
+Jest: Coverage for branches (22.54%) does not meet "global" threshold (70%)
+Jest: Coverage for lines (33.46%) does not meet "global" threshold (70%)
+Jest: Coverage for functions (44.9%) does not meet "global" threshold (70%)
+Test Suites: 10 failed, 3 passed, 13 total
+Tests:       63 failed, 129 passed, 192 total
+Snapshots:   0 total
+Time:        15.76 s
+Ran all test suites.
