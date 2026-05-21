@@ -84,8 +84,8 @@ describe('BillingRepository', () => {
       const result = await BillingRepository.getUsageLogs('user-1', 10);
 
       expect(query).toHaveBeenCalledWith(
-        'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-        ['user-1', 10]
+        'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 10',
+        ['user-1']
       );
       expect(result).toEqual(mockLogs);
     });
@@ -100,8 +100,8 @@ describe('BillingRepository', () => {
       const result = await BillingRepository.getUsageLogs('user-2', 5, mockConn);
 
       expect(mockExecute).toHaveBeenCalledWith(
-        'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-        ['user-2', 5]
+        'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+        ['user-2']
       );
       expect(result).toEqual(mockLogs);
     });
@@ -187,8 +187,8 @@ describe('BillingRepository', () => {
       const result = await BillingRepository.getCreditLogs('user-1', 10);
 
       expect(query).toHaveBeenCalledWith(
-        'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-        ['user-1', 10]
+        'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 10',
+        ['user-1']
       );
       expect(result).toEqual(mockLogs);
     });
@@ -203,8 +203,8 @@ describe('BillingRepository', () => {
       const result = await BillingRepository.getCreditLogs('user-2', 5, mockConn);
 
       expect(mockExecute).toHaveBeenCalledWith(
-        'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-        ['user-2', 5]
+        'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+        ['user-2']
       );
       expect(result).toEqual(mockLogs);
     });

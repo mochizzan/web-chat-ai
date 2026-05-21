@@ -17,9 +17,10 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({
       success: true,
-      synced: result.updated, // ModelService.syncModelsFromRemote returns { updated, created }
+      synced: result.updated + result.created,
       new: result.created,
       updated: result.updated,
+      disabled: result.disabled,
     });
   } catch (error: unknown) {
     const err = error as Error;

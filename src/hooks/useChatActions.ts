@@ -159,17 +159,18 @@ export function useChatActions(handleSend: (message: string) => void) {
       if (!response.ok) {
         console.log(`[${new Date().toISOString()}] [useChatActions] deductCredit: API error`, { status: response.status });
         const error = await response.json();
-        throw new Error(error.error || 'Gagal mengurangi kredit');
+        throw new Error(error.error?.message || 'Gagal mengurangi kredit');
       }
 
-      const data = await response.json();
+      const json = await response.json();
+      const data = json.data;
       
       // Update store HANYA setelah sukses
-      store.setCredit(data.credit ?? store.credit - amount);
-      if (data.totalSpent !== undefined) {
+      store.setCredit(data?.credit ?? store.credit - amount);
+      if (data?.totalSpent !== undefined) {
         store.setTotalSpent(data.totalSpent);
       }
-      if (data.creditLog) {
+      if (data?.creditLog) {
         const existing = store.creditLogs.find(l => l.id === data.creditLog.id);
         if (!existing) {
           store.setCreditLogs([data.creditLog, ...store.creditLogs]);
@@ -206,14 +207,15 @@ export function useChatActions(handleSend: (message: string) => void) {
       if (!response.ok) {
         console.log(`[${new Date().toISOString()}] [useChatActions] addCredit: API error`, { status: response.status });
         const error = await response.json();
-        throw new Error(error.error || 'Gagal menambahkan kredit');
+        throw new Error(error.error?.message || 'Gagal menambahkan kredit');
       }
 
-      const data = await response.json();
+      const json = await response.json();
+      const data = json.data;
       
       // Update store HANYA setelah sukses
-      store.setCredit(data.credit ?? store.credit + amount);
-      if (data.creditLog) {
+      store.setCredit(data?.credit ?? store.credit + amount);
+      if (data?.creditLog) {
         const existing = store.creditLogs.find(l => l.id === data.creditLog.id);
         if (!existing) {
           store.setCreditLogs([data.creditLog, ...store.creditLogs]);

@@ -437,17 +437,19 @@ export function AccountDialog() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, description: `Top up ${amount} kredit` }),
       });
-      const data = await res.json();
+      const json = await res.json();
       console.log('[DEBUG:B7] Topup response status=%d amount=%s', res.status, amount);
       if (res.ok) {
-        setCredit(data.credit);
-        console.log('[DEBUG:B7] Topup success, new credit=%s', data.credit);
+        const data = json.data;
+        setCredit(data?.credit);
+        console.log('[DEBUG:B7] Topup success, new credit=%s', data?.credit);
         toast({ title: 'Berhasil', description: `${amount} kredit ditambahkan ke akun Anda` });
         setSelectedPackage(null);
         setCustomAmount('');
       } else {
-        console.warn('[DEBUG:B7] Topup failed: %s', data.error);
-        toast({ title: 'Gagal', description: data.error || 'Topup gagal', variant: 'destructive' });
+        const errMsg = json.error?.message || json.error || 'Topup gagal';
+        console.warn('[DEBUG:B7] Topup failed: %s', errMsg);
+        toast({ title: 'Gagal', description: errMsg, variant: 'destructive' });
       }
     } catch (error) {
       console.error('[DEBUG:B7] Topup network error:', error);

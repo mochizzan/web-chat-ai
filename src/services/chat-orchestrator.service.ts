@@ -150,7 +150,10 @@ export const ChatOrchestratorService = {
 
       if (dbModel && dbModel.status !== 'active') {
         const statusLabel = dbModel.status === 'maintenance' ? 'sedang dalam maintenance' : 'tidak aktif';
-        throw new Error(`MODEL_DISABLED: Model "${modelId}" sedang ${statusLabel}. Silakan pilih model lain.`);
+        const additionalInfo = dbModel.status === 'disabled'
+          ? 'Model mungkin tidak tersedia karena sinkronisasi gagal atau belum dilakukan.'
+          : '';
+        throw new Error(`MODEL_DISABLED: Model "${modelId}" sedang ${statusLabel}. ${additionalInfo}Silakan pilih model lain.`);
       }
 
       if (dbModel) {

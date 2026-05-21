@@ -16,7 +16,7 @@ export const NotificationService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-ws-key': wsKey,
+          'x-api-key': wsKey,
         },
         body: JSON.stringify(event),
       });

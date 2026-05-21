@@ -84,8 +84,8 @@ describe('ModelService', () => {
       const modelId = 'model-1';
       const updates = {
         status: 'active',
-        input_price: 0.02,
-        output_price: 0.04,
+        inputPrice: 0.02,
+        outputPrice: 0.04,
       };
       const updatedModel = {
         id: modelId,
@@ -199,37 +199,47 @@ describe('ModelService', () => {
         { id: 'model-1', name: 'GPT-4o', provider: 'openai' },
         { id: 'model-2', name: 'Claude-3', provider: 'anthropic' },
       ];
+      
+      // Expected normalized models after processing by normalizeRemoteModel
+      const expectedNormalizedModels = mockRemoteModels.map(model => ({
+        ...model,
+        max_context: 128000,
+        max_output_tokens: null,
+        thinking: 0,
+      }));
 
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ data: mockRemoteModels }),
       }) as { ok: boolean; json: () => Promise<{ data: { id: string; name: string; provider: string }[] }> };
 
-      mockedModelRepository.syncModels.mockResolvedValue(undefined);
+      mockedModelRepository.syncModels.mockResolvedValue({ created: 0, updated: 2, disabled: 0 });
 
       const result = await ModelService.syncModelsFromRemote();
 
-      expect(fetch).toHaveBeenCalledWith('https://api.omnirouter.ai/v1/models', {
+      const baseUrl = process.env.OMNIROUTER_BASE_URL || 'http://localhost:20128/v1';
+      expect(fetch).toHaveBeenCalledWith(`${baseUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${process.env.OMNIROUTER_API_KEY}`,
         },
       });
-      expect(mockedModelRepository.syncModels).toHaveBeenCalledWith(mockRemoteModels);
+      expect(mockedModelRepository.syncModels).toHaveBeenCalledWith(expectedNormalizedModels);
       expect(mockedNotificationService.broadcast).toHaveBeenCalledWith({
         type: 'models:synced',
         count: 2,
       });
-      expect(result).toEqual({ updated: 2, created: 0 });
+      expect(result).toEqual({ updated: 2, created: 0, disabled: 0 });
     });
 
     it('should throw error if response not ok', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
+        status: 401,
         statusText: 'Unauthorized',
-      }) as { ok: boolean; statusText: string };
+      }) as { ok: boolean; status: number; statusText: string };
 
       await expect(ModelService.syncModelsFromRemote()).rejects.toThrow(
-        'Failed to fetch models from OmniRouter: Unauthorized'
+        'Failed to fetch models from OmniRouter API (http://localhost:20128/v1): 401 Unauthorized'
       );
       expect(mockedModelRepository.syncModels).not.toHaveBeenCalled();
     });
@@ -241,7 +251,7 @@ describe('ModelService', () => {
       }) as { ok: boolean; json: () => Promise<{ data: { error: string } }> };
 
       await expect(ModelService.syncModelsFromRemote()).rejects.toThrow(
-        'Invalid response format from OmniRouter'
+        'Invalid response format from OmniRouter API: Expected array of models'
       );
       expect(mockedModelRepository.syncModels).not.toHaveBeenCalled();
     });

@@ -20,8 +20,9 @@ export function useAdminModels() {
     try {
       const response = await fetch(`/api/models?all=${all}`);
       if (response.ok) {
-        const data = await response.json();
-        if (data.models) {
+        const json = await response.json();
+        const data = json.data;
+        if (data?.models) {
           setModels(data.models);
         }
       }
@@ -41,7 +42,7 @@ export function useAdminModels() {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Gagal menambahkan model');
+        throw new Error(err.error?.message || 'Gagal menambahkan model');
       }
       await fetchModels(true);
       toast({ title: 'Berhasil', description: `Model "${modelData.name}" ditambahkan` });
@@ -67,7 +68,7 @@ export function useAdminModels() {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Gagal memperbarui model');
+        throw new Error(err.error?.message || 'Gagal memperbarui model');
       }
       updateModel(modelId, updates);
       toast({ title: 'Berhasil', description: 'Model diperbarui' });
@@ -89,7 +90,7 @@ export function useAdminModels() {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Gagal menghapus model');
+        throw new Error(err.error?.message || 'Gagal menghapus model');
       }
       removeModel(modelId);
       toast({ title: 'Berhasil', description: 'Model berhasil dihapus' });
@@ -113,7 +114,7 @@ export function useAdminModels() {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || 'Gagal mengubah status gratis');
+        throw new Error(err.error?.message || 'Gagal mengubah status gratis');
       }
       toggleModelFree(modelId);
       toast({ title: 'Berhasil', description: `Model ${!currentFree ? 'gratis' : 'berbayar'}` });
@@ -132,9 +133,10 @@ export function useAdminModels() {
     setIsSyncing(true);
     try {
       const response = await fetch('/api/admin/sync-models', { method: 'POST' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Gagal melakukan sinkronisasi model');
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error?.message || 'Gagal melakukan sinkronisasi model');
       
+      const data = json.data;
       await fetchModels(true);
       toast({
         title: 'Berhasil',

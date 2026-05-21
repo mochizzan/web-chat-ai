@@ -32,7 +32,7 @@ describe('NotificationService', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-ws-key': '',
+            'x-api-key': '',
           },
           body: JSON.stringify(event),
         }
@@ -72,7 +72,7 @@ describe('NotificationService', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-ws-key': 'secret-key',
+            'x-api-key': 'secret-key',
           },
           body: JSON.stringify(event),
         }

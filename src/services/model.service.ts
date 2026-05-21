@@ -2,6 +2,35 @@
 import { ModelRepository } from '@/repositories/model.repo';
 import { NotificationService } from '@/services/notification.service';
 
+/**
+ * Normalize model object from remote API to internal format.
+ * Remote API (OmniRouter) doesn't always send all fields.
+ * Performs field mapping and derives name from id/root if name is missing.
+ */
+function normalizeRemoteModel(raw: any): any {
+  // Derive name from root, then id if name is not present
+  const derivedName = raw.name
+    ?? raw.root
+    ?? raw.id
+    ?? null;
+
+  // Derive provider from id (format: "provider/model-name")
+  const derivedProvider = raw.provider
+    ?? raw.owned_by
+    ?? (raw.id?.includes('/') ? raw.id.split('/')[0] : null)
+    ?? null;
+
+  return {
+    ...raw,
+    name: derivedName,
+    provider: derivedProvider,
+    // Map capabilities to internal fields
+    max_context: raw.context_length ?? raw.max_context ?? 128000,
+    max_output_tokens: raw.max_output_tokens ?? null,
+    thinking: raw.capabilities?.reasoning ? 1 : 0,
+  };
+}
+
 export const ModelService = {
   async getModels(filters: { all?: boolean; provider?: string }) {
     const normalizedFilters = {
@@ -43,16 +72,12 @@ export const ModelService = {
     if (data.maxContext !== undefined) updates.max_context = data.maxContext;
     if (data.discountPercent !== undefined) updates.discount_percent = data.discountPercent;
     if (data.discountType !== undefined) updates.discount_type = data.discountType;
-    if (data.output_price !== undefined) updates.output_price = data.output_price;
     if (data.free !== undefined) updates.free = data.free ? 1 : 0;
     if (data.name !== undefined) updates.name = data.name;
     if (data.provider !== undefined) updates.provider = data.provider;
     if (data.description !== undefined) updates.description = data.description;
     if (data.thinking !== undefined) updates.thinking = data.thinking ? 1 : 0;
-    if (data.max_context !== undefined) updates.max_context = data.max_context;
     if (data.speed !== undefined) updates.speed = data.speed;
-    if (data.discount_percent !== undefined) updates.discount_percent = data.discount_percent;
-    if (data.discount_type !== undefined) updates.discount_type = data.discount_type;
 
     if (Object.keys(updates).length === 0) {
       throw new Error('No fields to update');
@@ -92,42 +117,57 @@ export const ModelService = {
    * Synchronizes models from a remote source (OmniRouter).
    * Fetch remote -> Diff with DB -> Update/Insert.
    */
-  async syncModelsFromRemote(): Promise<{ updated: number; created: number }> {
+  async syncModelsFromRemote(): Promise<{ updated: number; created: number; disabled: number }> {
     try {
-      const response = await fetch('https://api.omnirouter.ai/v1/models', {
+      const baseUrl = process.env.OMNIROUTER_BASE_URL || 'http://localhost:20128/v1';
+      const response = await fetch(`${baseUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${process.env.OMNIROUTER_API_KEY}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch models from OmniRouter: ${response.statusText}`);
+        const errorMessage = `Failed to fetch models from OmniRouter API (${baseUrl}): ${response.status} ${response.statusText}`;
+        console.error('[ModelService] Sync Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: `${baseUrl}/models`
+        });
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      const remoteModels = data.data || [];
+      
+      // Check if data.data is an array before trying to map over it
+      if (!Array.isArray(data.data)) {
+        throw new Error('Invalid response format from OmniRouter API: Expected array of models');
+      }
+      
+      const remoteModels = data.data.map(normalizeRemoteModel);
 
       if (!Array.isArray(remoteModels)) {
-        throw new Error('Invalid response format from OmniRouter');
+        throw new Error('Invalid response format from OmniRouter API: Expected array of models');
       }
 
-      // The ModelRepository.syncModels already handles the UPSERT logic
-      await ModelRepository.syncModels(remoteModels);
+      // syncModels now returns { created, updated, disabled } with smart diff logic
+      const result = await ModelRepository.syncModels(remoteModels);
 
-      // Calculate diff for the response
-      const updatedCount = remoteModels.length; // Simplified for this implementation
-      
       await NotificationService.broadcast({
         type: 'models:synced',
         count: remoteModels.length,
       });
 
       return {
-        updated: updatedCount,
-        created: 0, // Simplified
+        updated: result.updated,
+        created: result.created,
+        disabled: result.disabled,
       };
     } catch (error) {
       console.error('[ModelService] Sync Error:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const baseUrl = process.env.OMNIROUTER_BASE_URL || 'http://localhost:20128/v1';
+        throw new Error(`Failed to connect to OmniRouter API (${baseUrl}). Please check network connectivity and API endpoint configuration.`);
+      }
       throw error;
     }
   },

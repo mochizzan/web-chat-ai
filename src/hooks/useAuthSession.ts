@@ -68,8 +68,9 @@ export function useAuthSession() {
         const convRes = await fetch('/api/conversations');
         console.log(`[${new Date().toISOString()}] [useAuthSession] fetchServerData: Conversations response`, { status: convRes.status });
         if (convRes.ok) {
-          const convData = await convRes.json();
-          if (!cancelled && convData.conversations) {
+          const convJson = await convRes.json();
+          const convData = convJson.data;
+          if (!cancelled && convData?.conversations) {
             console.log(`[${new Date().toISOString()}] [useAuthSession] fetchServerData: Setting conversations`, { count: convData.conversations.length });
             setConversations(convData.conversations);
           }

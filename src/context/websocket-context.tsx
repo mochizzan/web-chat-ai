@@ -60,8 +60,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       const adminPath = window.location.pathname.startsWith('/admin');
       const response = await fetch(adminPath ? '/api/models?all=true' : '/api/models');
       if (response.ok) {
-        const data = await response.json();
-        if (data.models) {
+        const json = await response.json();
+        const data = json.data;
+        if (data?.models) {
           const state = store.getState();
           state.setModels(data.models);
 

@@ -26,7 +26,7 @@ const SIDEBAR_ITEMS: { id: AdminSection; label: string }[] = [
 export default function AdminPage() {
   const router = useRouter();
   const { user, isLoggedIn } = useChatStore();
-  const { models, fetchModels, deleteModel, toggleFreeStatus, syncModels, isSyncing } = useAdminModels();
+  const { models, fetchModels, deleteModel, toggleFreeStatus, syncModels, isSyncing, updateModelData } = useAdminModels();
   const { fetchUsers, setCredit, addCredit, isLoadingUsers } = useAdminUsers();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
