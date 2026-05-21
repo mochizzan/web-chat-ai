@@ -55,7 +55,7 @@ export const BillingRepository = {
     const startTime = Date.now();
     try {
       const sql = 'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?';
-      const params = [userId, limit];
+      const params = [userId, Number(limit) || 100];
       
       if (conn) {
         const [rows] = await conn.execute(sql, params) as unknown as [UsageLog[]];
@@ -93,7 +93,9 @@ export const BillingRepository = {
     });
     const startTime = Date.now();
     try {
-      const offset = (page - 1) * limit;
+      const safePage = Number(page) || 1;
+      const safeLimit = Number(limit) || 50;
+      const offset = (safePage - 1) * safeLimit;
       const conditions: string[] = [];
       const params: any[] = [];
 
@@ -138,7 +140,7 @@ export const BillingRepository = {
         ${whereClause}
         ORDER BY ul.created_at DESC
         LIMIT ? OFFSET ?`,
-        [...params, limit, offset]
+        [...params, safeLimit, offset]
       );
 
       console.log(`[${new Date().toISOString()}] [BillingRepository] getAdminUsageLogs: Successfully queried admin usage logs`, {
@@ -149,7 +151,7 @@ export const BillingRepository = {
       return {
         logs: logs || [],
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / safeLimit),
       };
     } catch (error) {
       console.error(`[${new Date().toISOString()}] [BillingRepository] getAdminUsageLogs: Error querying admin usage logs`, {
@@ -173,7 +175,7 @@ export const BillingRepository = {
     const startTime = Date.now();
     try {
       const sql = 'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?';
-      const params = [userId, limit];
+      const params = [userId, Number(limit) || 50];
       
       if (conn) {
         const [rows] = await conn.execute(sql, params) as unknown as [CreditLog[]];

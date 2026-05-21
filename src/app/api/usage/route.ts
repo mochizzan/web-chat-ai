@@ -12,7 +12,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam, 10) : 50;
+    if (isNaN(limit) || limit <= 0) {
+      return apiError('Invalid limit parameter', 400);
+    }
 
     const logs = await BillingService.getUsageLogs(auth.userId, limit);
 

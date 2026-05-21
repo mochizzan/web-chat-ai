@@ -1,23 +1,16 @@
-```gitignore
+```
 # Dependencies
 node_modules/
 .pnpm-store/
+.npm/
 .yarn/
-.yarn-cache/
 
 # Build outputs
 dist/
 build/
 .next/
-.nuxt/
 out/
 public/build/
-
-# TypeScript/JavaScript
-*.tsbuildinfo
-*.js.map
-*.jsx.map
-*.tsx.map
 
 # Logs
 *.log
@@ -31,28 +24,17 @@ yarn-error.log*
 .env.*
 !.env.example
 
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS generated files
+# OS
 .DS_Store
 Thumbs.db
 
 # Coverage
 coverage/
 .nyc_output/
-istanbul/
-.jest/
-
-# Temporary files
-*.tmp
-*.temp
-.DS_Store?
 ```
-
-Wait, let me reconsider. The changes are only TypeScript/JSX source files (.tsx), which shouldn't be ignored. No build artifacts, dependencies, or temporary files are shown in the changes. The current .gitignore appears to be empty.
-
-(empty — output nothing)
