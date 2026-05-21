@@ -54,11 +54,13 @@ export const BillingRepository = {
     });
     const startTime = Date.now();
     try {
+      const safeLimit = Number(limit) || 100;
       const sql = 'SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?';
-      const params = [userId, Number(limit) || 100];
+      // Use String() for limit parameter to ensure compatibility with prepared statements
+      const params = [userId, String(safeLimit)];
       
       if (conn) {
-        const [rows] = await conn.execute(sql, params) as unknown as [UsageLog[]];
+        const [rows] = await conn.query(sql, params) as unknown as [UsageLog[]];
         console.log(`[${new Date().toISOString()}] [BillingRepository] getUsageLogs: Successfully queried usage logs`, {
           userId,
           count: rows.length,
@@ -66,7 +68,8 @@ export const BillingRepository = {
         });
         return rows;
       }
-      const result = await query<UsageLog[]>(sql, params);
+      // Use querySimple for queries with LIMIT to avoid prepared statement issues
+      const result = await querySimple<UsageLog[]>(sql, params);
       console.log(`[${new Date().toISOString()}] [BillingRepository] getUsageLogs: Successfully queried usage logs`, {
         userId,
         count: result.length,
@@ -174,11 +177,13 @@ export const BillingRepository = {
     });
     const startTime = Date.now();
     try {
+      const safeLimit = Number(limit) || 50;
       const sql = 'SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?';
-      const params = [userId, Number(limit) || 50];
+      // Use String() for limit parameter to ensure compatibility with prepared statements
+      const params = [userId, String(safeLimit)];
       
       if (conn) {
-        const [rows] = await conn.execute(sql, params) as unknown as [CreditLog[]];
+        const [rows] = await conn.query(sql, params) as unknown as [CreditLog[]];
         console.log(`[${new Date().toISOString()}] [BillingRepository] getCreditLogs: Successfully queried credit logs`, {
           userId,
           count: rows.length,
@@ -186,7 +191,8 @@ export const BillingRepository = {
         });
         return rows;
       }
-      const result = await query<CreditLog[]>(sql, params);
+      // Use querySimple for queries with LIMIT to avoid prepared statement issues
+      const result = await querySimple<CreditLog[]>(sql, params);
       console.log(`[${new Date().toISOString()}] [BillingRepository] getCreditLogs: Successfully queried credit logs`, {
         userId,
         count: result.length,

@@ -25,7 +25,10 @@ export const ModelRepository = {
   },
 
   async getModelById(id: string): Promise<Model | null> {
-    return await querySimple<Model>('SELECT * FROM models WHERE id = ?', [id]);
+    const sql = 'SELECT * FROM models WHERE id = ?';
+    // Use String() for parameters to ensure compatibility with prepared statements
+    const params = [String(id)];
+    return await querySimple<Model>(sql, params);
   },
 
   async updateModel(id: string, updates: Partial<Model>): Promise<void> {
@@ -46,11 +49,11 @@ export const ModelRepository = {
   },
 
   async deleteModel(id: string): Promise<void> {
-    await query('DELETE FROM models WHERE id = ?', [id]);
+    await query('DELETE FROM models WHERE id = ?', [String(id)]);
   },
 
   async getActiveModels(): Promise<Model[]> {
-    return await query<Model[]>('SELECT * FROM models WHERE status = ?', ['active']);
+    return await query<Model[]>('SELECT * FROM models WHERE status = ?', [String('active')]);
   },
 
   async updateModelPricing(modelId: string, pricing: { input_price: number, output_price: number }): Promise<void> {
@@ -61,7 +64,7 @@ export const ModelRepository = {
   },
 
   async updateModelStatus(modelId: string, status: string): Promise<void> {
-    await query('UPDATE models SET status = ? WHERE id = ?', [status, modelId]);
+    await query('UPDATE models SET status = ? WHERE id = ?', [String(status), String(modelId)]);
   },
 
   async syncModels(models: any[]): Promise<void> {

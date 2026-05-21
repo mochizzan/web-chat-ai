@@ -7,7 +7,8 @@ export const UserRepository = {
     console.log(`[${new Date().toISOString()}] [UserRepository] findById: Querying user by ID`, { id });
     const startTime = Date.now();
     try {
-      const result = await querySingle<User>('SELECT * FROM users WHERE id = ?', [id]);
+      // Use String() for parameters to ensure compatibility with prepared statements
+      const result = await querySingle<User>('SELECT * FROM users WHERE id = ?', [String(id)]);
       console.log(`[${new Date().toISOString()}] [UserRepository] findById: Successfully found user`, {
         id,
         found: result !== null,
@@ -28,7 +29,8 @@ export const UserRepository = {
     console.log(`[${new Date().toISOString()}] [UserRepository] findByEmail: Querying user by email`, { email });
     const startTime = Date.now();
     try {
-      const result = await querySingle<User>('SELECT * FROM users WHERE email = ?', [email]);
+      // Use String() for parameters to ensure compatibility with prepared statements
+      const result = await querySingle<User>('SELECT * FROM users WHERE email = ?', [String(email)]);
       console.log(`[${new Date().toISOString()}] [UserRepository] findByEmail: Successfully found user`, {
         email,
         found: result !== null,
@@ -163,14 +165,14 @@ export const UserRepository = {
       
       const totalResult = await querySingle<{ total: number }>(
         'SELECT COUNT(*) as total FROM users WHERE email LIKE ? OR name LIKE ?',
-        [searchPattern, searchPattern]
+        [String(searchPattern), String(searchPattern)]
       );
       
       // Interpolate limit & offset as raw integers — some MySQL drivers/configurations
       // do not support parameterized placeholders (?) for LIMIT/OFFSET clauses.
       const users = await querySimple<User[]>(
         `SELECT * FROM users WHERE email LIKE ? OR name LIKE ? ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${offset}`,
-        [searchPattern, searchPattern]
+        [String(searchPattern), String(searchPattern)]
       );
       
       console.log(`[${new Date().toISOString()}] [UserRepository] listUsers: Successfully queried users`, {
