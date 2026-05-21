@@ -55,7 +55,8 @@ export const BillingService = {
    */
   async getUsageLogs(userId: string, limit: number) {
     console.log(`[${new Date().toISOString()}] [BillingService] getUsageLogs: Fetching usage logs`, { userId, limit });
-    const logs = await BillingRepository.getUsageLogs(userId, limit);
+    const safeLimit = Number(limit) || 100;
+    const logs = await BillingRepository.getUsageLogs(userId, safeLimit);
     console.log(`[${new Date().toISOString()}] [BillingService] getUsageLogs: Successfully fetched usage logs`, {
       userId,
       logCount: logs.length
