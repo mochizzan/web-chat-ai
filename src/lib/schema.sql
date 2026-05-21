@@ -84,14 +84,22 @@ CREATE TABLE IF NOT EXISTS usage_logs (
 CREATE TABLE IF NOT EXISTS credit_logs (
   id VARCHAR(64) PRIMARY KEY,
   user_id VARCHAR(64) NOT NULL,
-  type ENUM('topup', 'usage', 'admin_adjust') NOT NULL,
+  type ENUM('topup', 'deduct', 'admin_set', 'usage') NOT NULL,
   amount DECIMAL(12,4) NOT NULL,
   balance DECIMAL(12,4) NOT NULL,
+  previous_balance DECIMAL(12,4) DEFAULT NULL,
   description VARCHAR(500),
+  operator_id VARCHAR(64) DEFAULT NULL,
+  operator_name VARCHAR(255) DEFAULT NULL,
+  note TEXT DEFAULT NULL,
+  invoice_number VARCHAR(32) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_user (user_id),
-  INDEX idx_created (user_id, created_at DESC)
+  INDEX idx_created (user_id, created_at DESC),
+  INDEX idx_invoice (invoice_number),
+  INDEX idx_type (type),
+  INDEX idx_operator (operator_id)
 ) ENGINE=InnoDB;
 
 -- 6. MODELS — sync from OmniRouter, managed by admin

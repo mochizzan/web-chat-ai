@@ -1,19 +1,29 @@
 -- Migration: Billing & Invoice System
 -- Menambahkan kolom invoice support ke credit_logs dan mengupdate ENUM type
 
--- First, modify the ENUM to include new types
--- We need to change 'admin_adjust' to support 'topup', 'deduct', 'admin_set', 'usage'
--- Since MySQL doesn't support dropping ENUM values easily, we'll need to recreate the column
--- This migration assumes the current ENUM is 'topup', 'usage', 'admin_adjust'
+-- First, check if columns already exist to avoid errors
+-- Step 1: Add new columns (check if they don't exist first)
+SET @has_type_new = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'type_new');
+SET @has_previous_balance = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'previous_balance');
+SET @has_invoice_number = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'invoice_number');
+SET @has_operator_id = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'operator_id');
+SET @has_operator_name = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'operator_name');
+SET @has_note = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'ai_chat_web' AND TABLE_NAME = 'credit_logs' AND COLUMN_NAME = 'note');
 
--- Step 1: Add new columns with updated ENUM
+-- Add columns only if they don't exist
 ALTER TABLE credit_logs
-  ADD COLUMN IF NOT EXISTS type_new ENUM('topup', 'deduct', 'admin_set', 'usage') NOT NULL AFTER type,
-  ADD COLUMN IF NOT EXISTS previous_balance DECIMAL(12,4) DEFAULT NULL AFTER balance,
-  ADD COLUMN IF NOT EXISTS invoice_number VARCHAR(32) DEFAULT NULL AFTER note,
-  ADD COLUMN IF NOT EXISTS operator_id VARCHAR(64) DEFAULT NULL COMMENT 'Admin yang melakukan perubahan' AFTER description,
-  ADD COLUMN IF NOT EXISTS operator_name VARCHAR(255) DEFAULT NULL AFTER operator_id,
-  ADD COLUMN IF NOT EXISTS note TEXT DEFAULT NULL COMMENT 'Catatan admin untuk invoice' AFTER operator_name;
+  ADD COLUMN type_new ENUM('topup', 'deduct', 'admin_set', 'usage') NULL AFTER type,
+  ADD COLUMN previous_balance DECIMAL(12,4) DEFAULT NULL AFTER balance,
+  ADD COLUMN operator_id VARCHAR(64) DEFAULT NULL COMMENT 'Admin yang melakukan perubahan' AFTER description,
+  ADD COLUMN operator_name VARCHAR(255) DEFAULT NULL AFTER operator_id,
+  ADD COLUMN note TEXT DEFAULT NULL COMMENT 'Catatan admin untuk invoice' AFTER operator_name,
+  ADD COLUMN invoice_number VARCHAR(32) DEFAULT NULL AFTER note;
 
 -- Step 2: Migrate data from old type to new type
 -- Map: 'admin_adjust' -> 'admin_set' (or we could determine by amount sign)
@@ -33,7 +43,6 @@ ALTER TABLE credit_logs
 
 -- Step 4: Add indexes for fast search
 ALTER TABLE credit_logs
-  ADD INDEX IF NOT EXISTS idx_invoice (invoice_number),
-  ADD INDEX IF NOT EXISTS idx_type (type),
-  ADD INDEX IF NOT EXISTS idx_operator (operator_id),
-  ADD INDEX IF NOT EXISTS idx_user_created (user_id, created_at DESC);
+  ADD INDEX idx_invoice (invoice_number),
+  ADD INDEX idx_type (type),
+  ADD INDEX idx_operator (operator_id);
