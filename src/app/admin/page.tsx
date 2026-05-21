@@ -13,7 +13,7 @@ import { AdminLogsView } from '@/components/admin/admin-logs-view';
 import { AdminSettingsPanel } from '@/components/admin/admin-settings-panel';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useAdminModels } from '@/hooks/useAdminModels';
-import type { AdminSection } from '@/lib/admin-types';
+import type { AdminSection, AdminUser } from '@/lib/admin-types';
 
 const SIDEBAR_ITEMS: { id: AdminSection; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -32,7 +32,7 @@ export default function AdminPage() {
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
   const [creditUserId, setCreditUserId] = useState<string | null>(null);
   const [creditAmount, setCreditAmount] = useState('');
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersPage, setUsersPage] = useState(1);
   const usersLimit = 10;
   const [usersTotal, setUsersTotal] = useState(0);
