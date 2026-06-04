@@ -40,6 +40,7 @@ export const ModelService = {
     const models = await ModelRepository.getModels(normalizedFilters);
     return models.map(m => ({
       id: m.id,
+      publicId: m.public_id || undefined,
       name: m.name,
       provider: m.provider,
       description: m.description,
@@ -78,6 +79,7 @@ export const ModelService = {
     if (data.description !== undefined) updates.description = data.description;
     if (data.thinking !== undefined) updates.thinking = data.thinking ? 1 : 0;
     if (data.speed !== undefined) updates.speed = data.speed;
+    if (data.publicId !== undefined) updates.public_id = data.publicId || null;
 
     if (Object.keys(updates).length === 0) {
       throw new Error('No fields to update');
@@ -91,6 +93,7 @@ export const ModelService = {
         type: 'model:update',
         model: {
           id: model.id,
+          publicId: model.public_id || undefined,
           status: (model.status || 'disabled') as any,
           inputPrice: Number(model.input_price || 0),
           outputPrice: Number(model.output_price || 0),
@@ -120,6 +123,7 @@ export const ModelService = {
   async syncModelsFromRemote(): Promise<{ updated: number; created: number; disabled: number }> {
     try {
       const baseUrl = process.env.OMNIROUTER_BASE_URL || 'http://localhost:20128/v1';
+      console.log(`[ModelService] Starting model sync from ${baseUrl}`);
       const response = await fetch(`${baseUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${process.env.OMNIROUTER_API_KEY}`,
@@ -144,12 +148,14 @@ export const ModelService = {
       }
       
       const remoteModels = data.data.map(normalizeRemoteModel);
+      console.log(`[ModelService] Fetched ${remoteModels.length} models from OmniRouter`);
 
       if (!Array.isArray(remoteModels)) {
         throw new Error('Invalid response format from OmniRouter API: Expected array of models');
       }
 
       // syncModels now returns { created, updated, disabled } with smart diff logic
+      console.log(`[ModelService] Starting DB sync process`);
       const result = await ModelRepository.syncModels(remoteModels);
 
       await NotificationService.broadcast({
@@ -157,6 +163,7 @@ export const ModelService = {
         count: remoteModels.length,
       });
 
+      console.log(`[ModelService] Sync completed. Created: ${result.created}, Updated: ${result.updated}, Disabled: ${result.disabled}`);
       return {
         updated: result.updated,
         created: result.created,
@@ -178,5 +185,72 @@ export const ModelService = {
   async validateModelStatus(modelId: string): Promise<boolean> {
     const models = await ModelRepository.getActiveModels();
     return models.some(m => m.id === modelId);
+  },
+
+  /**
+   * Returns only models that have a public_id assigned.
+   * Used by the public /v1/models endpoint to expose only branded IDs.
+   */
+  async getModelsWithPublicId() {
+    const models = await ModelRepository.getModelsWithPublicId();
+    return models.map(m => ({
+      id: m.id,
+      publicId: m.public_id,
+      name: m.name,
+      provider: m.provider,
+      description: m.description,
+      status: m.status || 'disabled',
+      maxContext: m.max_context || 128000,
+      thinking: Boolean(m.thinking),
+      inputPrice: Number(m.input_price) || 0,
+      outputPrice: Number(m.output_price) || 0,
+      free: Boolean(m.free),
+      speed: m.speed || 'normal',
+      discountPercent: Number(m.discount_percent) || 0,
+      discountType: m.discount_type || 'none',
+    }));
+  },
+
+  /**
+   * Auto-assign public_id for active models that don't have one.
+   * Naming convention: milabs/{base-model-name}
+   * Skips models that already have a public_id.
+   * In case of duplicate base names, only the first (alphabetically by provider) gets assigned.
+   */
+  async autoAssignPublicIds(): Promise<{ assigned: number; skipped: number }> {
+    const allModels = await ModelRepository.getModels({ all: false });
+    const activeModels = allModels.filter(m => m.status === 'active' && !m.public_id);
+
+    // Group by base name (last segment of id, without -free suffix)
+    const groups = new Map<string, typeof activeModels>();
+    for (const model of activeModels) {
+      const baseName = model.id.includes('/') ? model.id.split('/').pop()! : model.id;
+      const cleanName = baseName.replace(/-free$/i, '');
+      const group = groups.get(cleanName) || [];
+      group.push(model);
+      groups.set(cleanName, group);
+    }
+
+    let assigned = 0;
+    let skipped = 0;
+
+    for (const [baseName, group] of groups) {
+      // Sort by provider alphabetically, pick first
+      group.sort((a, b) => (a.provider || '').localeCompare(b.provider || ''));
+      const winner = group[0];
+
+      const publicId = `milabs/${baseName.toLowerCase()}`;
+      await ModelRepository.updateModel(winner.id, { public_id: publicId } as any);
+      assigned++;
+
+      // Log skipped duplicates
+      if (group.length > 1) {
+        console.log(`[ModelService] Duplicate base model "${baseName}": assigned public_id to ${winner.id}, skipped: ${group.slice(1).map(m => m.id).join(', ')}`);
+        skipped += group.length - 1;
+      }
+    }
+
+    console.log(`[ModelService] Auto-assigned ${assigned} public_ids (${skipped} duplicates skipped)`);
+    return { assigned, skipped };
   },
 };

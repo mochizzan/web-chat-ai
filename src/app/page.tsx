@@ -20,10 +20,13 @@ import {
 import { useChatStream } from '@/hooks/useChatStream';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { ChatContainer } from '@/components/chat/chat-container';
-import { StreamingIndicator } from '@/components/chat/streaming-indicator';
 
 export default function Home() {
+  // 0. Dynamic page title
+  usePageTitle('AI Chat Dashboard');
+
   // 1. AuthSession - Load user session and conversations from server
   useAuthSession();
 
@@ -140,13 +143,12 @@ export default function Home() {
               <div ref={mainRef} className="flex flex-1 flex-col min-w-0 overflow-hidden">
                 <TopBar onToggleSidebar={toggleSidebar} onToggleMobileSidebar={handleToggleMobileSidebar} />
 
-                <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
                   {messages.length === 0 && !isGenerating ? (
                     <EmptyState onQuickAction={updatedHandleQuickAction} />
                   ) : (
                     <MessageList onEditConfirm={handleEditConfirm} onRegenerate={handleRegenerate} />
                   )}
-                  {isGenerating && <StreamingIndicator />}
                 </div>
 
                 <ChatInput onSend={handleSend} onStop={handleStop} initialMessage={inputPrompt} key={inputKey} />

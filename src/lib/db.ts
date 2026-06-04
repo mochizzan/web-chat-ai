@@ -9,6 +9,7 @@ export function getPool(): mysql.Pool {
     if (!url) throw new Error('DATABASE_URL tidak diatur');
     pool = mysql.createPool({
       uri: url,
+      timezone: 'local',
       waitForConnections: true,
       connectionLimit: 10,
       maxIdle: 5,

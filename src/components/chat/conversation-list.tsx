@@ -58,9 +58,23 @@ export function ConversationList({
 
   const SIDEBAR_MODES = ['chat', 'agent', 'imagen'];
   const sidebarCategory = SIDEBAR_MODES.includes(activeCategory) ? activeCategory : 'chat';
-  const filteredConversations = sidebarCategory === 'chat'
+  const filteredConversations = (sidebarCategory === 'chat'
     ? conversations
-    : conversations.filter((c) => c.category === sidebarCategory);
+    : conversations.filter((c) => c.category === sidebarCategory)
+  ).filter((c) => {
+    // Hide anonymous conversations that have no data in localStorage
+    if (c.id.startsWith('conv_anon_')) {
+      const stored = localStorage.getItem(`anon_conversation_${c.id}`);
+      if (!stored) return false;
+      try {
+        const messages = JSON.parse(stored);
+        return Array.isArray(messages) && messages.length > 0;
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const pinnedConversations = filteredConversations.filter((c) => c.pinned);
   const sidebarRegularConvos = filteredConversations.filter((c) => !c.pinned);

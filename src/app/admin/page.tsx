@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bot, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/lib/store';
@@ -13,6 +14,7 @@ import { AdminLogsView } from '@/components/admin/admin-logs-view';
 import { AdminSettingsPanel } from '@/components/admin/admin-settings-panel';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { useAdminModels } from '@/hooks/useAdminModels';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import type { AdminSection, AdminUser } from '@/lib/admin-types';
 
 const SIDEBAR_ITEMS: { id: AdminSection; label: string }[] = [
@@ -24,14 +26,15 @@ const SIDEBAR_ITEMS: { id: AdminSection; label: string }[] = [
 ];
 
 export default function AdminPage() {
+  // 0. Dynamic page title
+  usePageTitle('Admin Control Panel');
+
   const router = useRouter();
   const { user, isLoggedIn } = useChatStore();
   const { models, fetchModels, deleteModel, toggleFreeStatus, syncModels, isSyncing, updateModelData } = useAdminModels();
   const { fetchUsers, setCredit, addCredit, isLoadingUsers } = useAdminUsers();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
-  const [creditUserId, setCreditUserId] = useState<string | null>(null);
-  const [creditAmount, setCreditAmount] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersPage, setUsersPage] = useState(1);
   const usersLimit = 10;
@@ -71,28 +74,12 @@ export default function AdminPage() {
     await toggleFreeStatus(modelId, model.free);
   };
 
-  const handleSetCredit = async (userId: string) => {
-    const amount = parseFloat(creditAmount);
-    if (isNaN(amount) || amount < 0) {
-      return;
-    }
-    const result = await setCredit(userId, amount);
-    if (result.success) {
-      setCreditUserId(null);
-      setCreditAmount('');
-    }
+  const handleSetCredit = async (userId: string, amount: number) => {
+    return await setCredit(userId, amount);
   };
 
-  const handleAddCredit = async (userId: string) => {
-    const amount = parseFloat(creditAmount);
-    if (isNaN(amount) || amount <= 0) {
-      return;
-    }
-    const result = await addCredit(userId, amount);
-    if (result.success) {
-      setCreditUserId(null);
-      setCreditAmount('');
-    }
+  const handleAddCredit = async (userId: string, amount: number) => {
+    return await addCredit(userId, amount);
   };
 
   if (!isLoggedIn || user?.role !== 'admin') {
@@ -116,33 +103,25 @@ export default function AdminPage() {
             }}
           />
         );
-      case 'users':
-        return (
-          <AdminUserTable
-            users={users}
-            isLoading={isLoadingUsers}
-            currentUser={user}
-            creditUserId={creditUserId}
-            creditAmount={creditAmount}
-            onSetCreditUser={(userId) => {
-              setCreditUserId(userId);
-              setCreditAmount('');
-            }}
-            onCreditAmountChange={setCreditAmount}
-            onSetCredit={handleSetCredit}
-            onAddCredit={handleAddCredit}
-            onCancelCredit={() => setCreditUserId(null)}
-            searchQuery={userSearchQuery}
-            onSearchChange={(q) => {
-              setUserSearchQuery(q);
-              setUsersPage(1);
-            }}
-            currentPage={usersPage}
-            totalPages={Math.ceil(usersTotal / usersLimit)}
-            onPageChange={setUsersPage}
-            totalUsers={usersTotal}
-          />
-        );
+       case 'users':
+         return (
+           <AdminUserTable
+             users={users}
+             isLoading={isLoadingUsers}
+             currentUser={user}
+             onSetCredit={handleSetCredit}
+             onAddCredit={handleAddCredit}
+             searchQuery={userSearchQuery}
+             onSearchChange={(q) => {
+               setUserSearchQuery(q);
+               setUsersPage(1);
+             }}
+             currentPage={usersPage}
+             totalPages={Math.ceil(usersTotal / usersLimit)}
+             onPageChange={setUsersPage}
+             totalUsers={usersTotal}
+           />
+         );
       case 'logs':
         return <AdminLogsView />;
       case 'settings':
@@ -158,7 +137,7 @@ export default function AdminPage() {
       <aside className="w-16 shrink-0 flex flex-col items-center border-r border-border/40 bg-sidebar py-4 gap-2">
         {/* Logo */}
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40 mb-4">
-          <Bot className="h-5 w-5 text-foreground" />
+          <Image src="/logo.png" alt="MI-Labs Logo" width={20} height={20} className="object-contain" />
         </div>
         {/* Nav Items */}
         {SIDEBAR_ITEMS.map((item) => {

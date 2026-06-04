@@ -1,5 +1,6 @@
 import { ChatRepository } from '../chat.repo';
 import { query, querySingle, querySimple } from '@/lib/db';
+import type { Message } from '@/types';
 
 // Mock db
 jest.mock('@/lib/db');
@@ -57,6 +58,36 @@ describe('ChatRepository', () => {
       await expect(
         ChatRepository.createConversation(userId, title)
       ).rejects.toThrow('Conversation creation failed');
+    });
+
+    it('should use provided id instead of generating new one', async () => {
+      const userId = 'user-123';
+      const title = 'Test Chat';
+      const model = 'gpt-4o';
+      const category = 'assistant';
+      const providedId = 'conv-custom-id-123';
+
+      const mockConv = {
+        id: providedId,
+        user_id: userId,
+        title,
+        model,
+        category,
+        pinned: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+
+      mockedQuery.mockResolvedValue(undefined);
+      mockedQuerySingle.mockResolvedValue(mockConv);
+
+      const result = await ChatRepository.createConversation(userId, title, model, category, providedId);
+
+      expect(mockedQuery).toHaveBeenCalledWith(
+        'INSERT INTO conversations (id, user_id, title, model, category) VALUES (?, ?, ?, ?, ?)',
+        [providedId, userId, title, model, category]
+      );
+      expect(result).toEqual(mockConv);
     });
   });
 
@@ -144,7 +175,7 @@ describe('ChatRepository', () => {
       const result = await ChatRepository.saveMessage(message);
 
       expect(mockedQuery).toHaveBeenCalledWith(
-        'INSERT INTO messages (id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO messages (id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         expect.arrayContaining([
           message.id,
           message.conversation_id,
@@ -167,7 +198,14 @@ describe('ChatRepository', () => {
         conversation_id: 'conv-123',
         role: 'user',
         content: 'Hello',
-      };
+        thinking_content: null,
+        input_tokens: 0,
+        output_tokens: 0,
+        input_cost: 0,
+        output_cost: 0,
+        total_cost: 0,
+        created_at: new Date().toISOString(),
+      } as Partial<Message>;
 
       mockedQuery.mockResolvedValue(undefined);
       mockedQuerySingle.mockResolvedValue(null);
@@ -194,7 +232,7 @@ describe('ChatRepository', () => {
       const result = await ChatRepository.getMessagesByConvId(convId);
 
       expect(mockedQuery).toHaveBeenCalledWith(
-        'SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC',
+        "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, CASE WHEN role = 'user' THEN 0 ELSE 1 END ASC, id ASC",
         [convId]
       );
       expect(result).toEqual(messages);
@@ -252,6 +290,22 @@ describe('ChatRepository', () => {
       expect(mockedQuery).toHaveBeenCalledWith(
         'UPDATE conversations SET updated_at = ? WHERE id = ?',
         [updatedAt, id]
+      );
+    });
+  });
+
+  describe('updateConversationCategory', () => {
+    it('should update conversation category', async () => {
+      const id = 'conv-123';
+      const category = 'coding';
+
+      mockedQuery.mockResolvedValue(undefined);
+
+      await ChatRepository.updateConversationCategory(id, category);
+
+      expect(mockedQuery).toHaveBeenCalledWith(
+        'UPDATE conversations SET category = ? WHERE id = ?',
+        [category, id]
       );
     });
   });

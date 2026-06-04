@@ -1,5 +1,5 @@
 'use client';
-import { Bot } from 'lucide-react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -16,7 +16,7 @@ export function AdminSettingsPanel() {
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/40">
-              <Bot className="h-6 w-6 text-foreground" />
+              <Image src="/logo.png" alt="MI-Labs Logo" width={24} height={24} className="object-contain" />
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">MI-Labs Chat</p>

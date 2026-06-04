@@ -112,4 +112,87 @@ export const AnalyticsRepository = {
     );
   },
 
+  // ========== BYOK / API Gateway Queries ==========
+
+  async getTotalApiKeys() {
+    return await querySingle<{ total: number }>('SELECT COUNT(*) as total FROM api_keys');
+  },
+
+  async getActiveApiKeysCount() {
+    return await querySingle<{ active: number }>(
+      'SELECT COUNT(*) as active FROM api_keys WHERE is_active = 1'
+    );
+  },
+
+  async getApiUsageSummary(interval: string) {
+    return await querySingle<{ total_requests: number; total_tokens: number; total_cost: number }>(
+      `SELECT
+        COUNT(*) as total_requests,
+        COALESCE(SUM(total_tokens), 0) as total_tokens,
+        COALESCE(SUM(cost), 0) as total_cost
+      FROM api_usage_logs
+      WHERE created_at >= ${interval}`
+    );
+  },
+
+  async getApiRequestsPerModel(interval: string) {
+    return await query<any[]>(
+      `SELECT model as name, COUNT(*) as requests
+      FROM api_usage_logs
+      WHERE created_at >= ${interval}
+      GROUP BY model
+      ORDER BY requests DESC`
+    );
+  },
+
+  async getApiUsageOverTime(interval: string, timeGrouping: { selectExpr: string; groupExpr: string }) {
+    return await query<any[]>(
+      `SELECT ${timeGrouping.selectExpr}, SUM(total_tokens) as tokens
+      FROM api_usage_logs
+      WHERE created_at >= ${interval}
+      GROUP BY ${timeGrouping.groupExpr}
+      ORDER BY time`
+    );
+  },
+
+  async getTopApiKeys(interval: string) {
+    return await query<any[]>(
+      `SELECT
+        ak.name,
+        ak.key_prefix,
+        COUNT(aul.id) as request_count,
+        COALESCE(SUM(aul.total_tokens), 0) as total_tokens,
+        COALESCE(SUM(aul.cost), 0) as total_cost
+      FROM api_keys ak
+      LEFT JOIN api_usage_logs aul ON aul.api_key_id = ak.id AND aul.created_at >= ${interval}
+      GROUP BY ak.id, ak.name, ak.key_prefix
+      ORDER BY request_count DESC
+      LIMIT 10`
+    );
+  },
+
+  async getTopApiUsers(interval: string) {
+    return await query<any[]>(
+      `SELECT
+        u.name,
+        u.email,
+        COUNT(aul.id) as request_count,
+        COALESCE(SUM(aul.total_tokens), 0) as total_tokens,
+        COALESCE(SUM(aul.cost), 0) as total_cost
+      FROM users u
+      LEFT JOIN api_usage_logs aul ON aul.user_id = u.id AND aul.created_at >= ${interval}
+      GROUP BY u.id, u.name, u.email
+      ORDER BY request_count DESC
+      LIMIT 10`
+    );
+  },
+
+  async getCombinedProfitStats() {
+    return await querySingle<{ profit: number }>(
+      `SELECT
+        COALESCE((SELECT SUM(amount) FROM credit_logs WHERE type='topup'), 0) -
+        COALESCE((SELECT SUM(total_cost) FROM usage_logs), 0) -
+        COALESCE((SELECT SUM(cost) FROM api_usage_logs), 0) as profit`
+    );
+  },
 };

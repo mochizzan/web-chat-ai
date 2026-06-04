@@ -37,6 +37,40 @@ export function useChatActions(handleSend: (message: string) => void) {
     async (id: string) => {
       const { setMessages, setActiveCategory, setActiveConversationId } =
         useChatDataStore.getState();
+
+      // ── Anonymous conversation: load from localStorage ──
+      if (id.startsWith('conv_anon_')) {
+        console.log(`[${new Date().toISOString()}] [useChatActions] handleLoadConversation: Loading anonymous conversation from localStorage`, { id });
+        const storageKey = `anon_conversation_${id}`;
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          try {
+            const messages = JSON.parse(stored);
+            if (Array.isArray(messages) && messages.length > 0) {
+              setMessages(messages);
+              setActiveCategory('chat');
+              setActiveConversationId(id);
+              return;
+            }
+          } catch {
+            // JSON parse failed, fall through to error toast
+          }
+        }
+
+        // No valid data found in localStorage
+        console.warn(`[useChatActions] Anonymous conversation not found in localStorage: ${id}`);
+        setMessages([]);
+        setActiveCategory('chat');
+        setActiveConversationId(null);
+        toast({
+          title: 'Percakapan tidak ditemukan',
+          description: 'Percakapan lokal telah kedaluwarsa atau dihapus. Memulai percakapan baru.',
+          variant: 'default',
+        });
+        return;
+      }
+
+      // ── Authenticated conversation: fetch from API ──
       try {
         console.log(`[${new Date().toISOString()}] [useChatActions] handleLoadConversation: Fetching conversation`, { id });
         const res = await fetch(`/api/conversations/${id}`);
@@ -50,6 +84,16 @@ export function useChatActions(handleSend: (message: string) => void) {
             setActiveCategory(data.conversation.category);
           }
           setActiveConversationId(id);
+        } else if (res.status === 404) {
+          console.warn(`[useChatActions] Conversation not found: ${id}, resetting to new conversation`);
+          setMessages([]);
+          setActiveCategory('chat');
+          setActiveConversationId(null);
+          toast({
+            title: 'Percakapan tidak ditemukan',
+            description: 'Percakapan mungkin telah dihapus. Memulai percakapan baru.',
+            variant: 'default',
+          });
         }
       } catch (error) {
         console.log(`[${new Date().toISOString()}] [useChatActions] handleLoadConversation: Error`, { error });
@@ -326,3 +370,4 @@ export function useChatActions(handleSend: (message: string) => void) {
     addCreditLog,
   };
 }
+

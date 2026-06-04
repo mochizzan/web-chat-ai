@@ -1,3 +1,26 @@
+// Polyfill Response for environments that don't have it (jsdom < Node 18)
+if (typeof Response === 'undefined') {
+  global.Response = class MockResponse {
+    constructor(body, init = {}) {
+      this._body = body;
+      this.status = init.status || 200;
+      this.statusText = init.statusText || '';
+      this._headers = init.headers || {};
+      this.ok = this.status >= 200 && this.status < 300;
+      this.headers = {
+        get: (name) => this._headers[name] || null,
+        has: (name) => name in this._headers,
+      };
+    }
+    async json() {
+      return JSON.parse(this._body);
+    }
+    async text() {
+      return String(this._body);
+    }
+  };
+}
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -73,65 +96,67 @@ Object.defineProperty(window, 'matchMedia', {
     onchange: null,
     addListener: jest.fn(),
     removeListener: jest.fn(),
-  })),
+  }))
 });
 
-// Mock ReadableStream for testing streaming responses
+// Polyfill TextEncoder/TextDecoder for jsdom environment
+if (typeof TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
+// Polyfill ReadableStream for jsdom environments (Node < 18)
 if (typeof ReadableStream === 'undefined') {
-  global.ReadableStream = class {
+  global.ReadableStream = class MockReadableStream {
     constructor(underlyingSource) {
-      this.underlyingSource = underlyingSource;
-    }
-    getReader() {
-      const underlyingSource = this.underlyingSource;
-      const chunks = [];
-      let isClosed = false;
-      
+      this._buffer = [];
+      this._closed = false;
+      this._startPromise = Promise.resolve();
+
       const controller = {
-        enqueue(chunk) {
-          chunks.push(chunk);
+        enqueue: (chunk) => {
+          if (!this._closed) {
+            this._buffer.push(chunk);
+          }
         },
-        close() {
-          isClosed = true;
+        close: () => {
+          this._closed = true;
         },
-        error(err) {
-          throw err;
-        }
+        error: () => {
+          this._closed = true;
+        },
       };
 
-      if (underlyingSource && underlyingSource.start) {
-        underlyingSource.start(controller);
-      }
-
-      return {
-        read() {
-          if (chunks.length > 0) {
-            return Promise.resolve({ value: chunks.shift(), done: false });
+      if (underlyingSource?.start) {
+        try {
+          const result = underlyingSource.start(controller);
+          if (result?.then) {
+            this._startPromise = result.then(() => {
+              if (!this._closed) this._closed = true;
+            }).catch(() => {
+              this._closed = true;
+            });
           }
-          return Promise.resolve({ value: undefined, done: true });
-        },
-        releaseLock() {}
+        } catch (e) {
+          this._closed = true;
+        }
+      }
+    }
+
+    getReader() {
+      const stream = this;
+      return {
+        read: jest.fn().mockImplementation(async () => {
+          await stream._startPromise;
+          if (stream._buffer.length > 0) {
+            return { value: stream._buffer.shift(), done: false };
+          }
+          return { value: undefined, done: stream._closed };
+        }),
+        cancel: jest.fn(),
+        releaseLock: jest.fn(),
       };
     }
   };
-}
-
-// Mock TextEncoder for testing
-if (typeof TextEncoder === 'undefined') {
-  class TextEncoder {
-    encode(str) {
-      return new Uint8Array(str.split('').map(c => c.charCodeAt(0)));
-    }
-  }
-  global.TextEncoder = TextEncoder;
-}
-
-// Mock TextDecoder for testing
-if (typeof TextDecoder === 'undefined') {
-  class TextDecoder {
-    decode(buffer) {
-      return String.fromCharCode(...buffer);
-    }
-  }
-  global.TextDecoder = TextDecoder;
 }

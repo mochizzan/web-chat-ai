@@ -18,6 +18,7 @@ export interface User {
   api_key?: string | null;
   created_at: Date | string;
   updated_at: Date | string;
+  isEmailVerified?: number; // 0 or 1
 }
 
 export interface Conversation {
@@ -62,7 +63,7 @@ export interface UsageLog {
   created_at: Date | string;
 }
 
-export type CreditLogType = 'topup' | 'usage' | 'deduct' | 'admin_set' | 'admin_adjust';
+export type CreditLogType = 'topup' | 'usage' | 'deduct' | 'admin_set' | 'admin_adjust' | 'bonus';
 
 export interface CreditLog {
   id: string;
@@ -111,4 +112,19 @@ export interface AnalyticsSummary {
     count: number;
     cost: number;
   }[];
+  byok_total_keys: number;
+  byok_active_keys: number;
+  byok_total_requests: number;
+  byok_total_tokens: number;
+  byok_total_cost: number;
+}
+
+export interface EmailVerification {
+  id: string;
+  user_id: string;
+  email: string;
+  otp_hash: string;
+  expires_at: Date | string;
+  used: number; // 0 or 1
+  created_at: Date | string;
 }

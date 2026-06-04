@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { query, querySingle } from '@/lib/db';
+import { query, querySingle, toMySQLDatetime } from '@/lib/db';
 import { Conversation, Message } from '@/types';
 
 export const ChatRepository = {
-  async createConversation(userId: string, title: string, model: string = 'gpt-4o', category: string = 'assistant'): Promise<Conversation> {
-    const id = `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  async createConversation(userId: string, title: string, model: string = 'gpt-4o', category: string = 'assistant', id?: string): Promise<Conversation> {
+    const convId = id || `conv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     await query(
       'INSERT INTO conversations (id, user_id, title, model, category) VALUES (?, ?, ?, ?, ?)',
-      [id, userId, title, model, category]
+      [convId, userId, title, model, category]
     );
     
-    const conv = await querySingle<Conversation>('SELECT * FROM conversations WHERE id = ?', [id]);
+    const conv = await querySingle<Conversation>('SELECT * FROM conversations WHERE id = ?', [convId]);
     if (!conv) throw new Error('Conversation creation failed');
     return conv;
   },
@@ -20,7 +20,7 @@ export const ChatRepository = {
       SELECT
         c.*,
         (SELECT JSON_OBJECT('id', m.id, 'role', m.role, 'content', LEFT(m.content, 200), 'created_at', m.created_at)
-         FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) as last_message
+         FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC, CASE WHEN m.role = 'user' THEN 0 ELSE 1 END DESC, m.id DESC LIMIT 1) as last_message
       FROM conversations c
       WHERE c.user_id = ?
       ORDER BY c.pinned DESC, c.updated_at DESC`, [userId]);
@@ -31,11 +31,19 @@ export const ChatRepository = {
   },
 
   async saveMessage(msg: Partial<Message>): Promise<Message> {
-    const { id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost } = msg;
+    const {
+      id, conversation_id, role, content,
+      thinking_content = null,
+      input_tokens = 0, output_tokens = 0,
+      input_cost = 0, output_cost = 0, total_cost = 0,
+      created_at
+    } = msg;
+    
+    const formattedCreatedAt = created_at ? toMySQLDatetime(new Date(created_at)) : toMySQLDatetime(new Date());
     
     await query(
-      'INSERT INTO messages (id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost]
+      'INSERT INTO messages (id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, conversation_id, role, content, thinking_content, input_tokens, output_tokens, input_cost, output_cost, total_cost, formattedCreatedAt]
     );
     
     const message = await querySingle<Message>('SELECT * FROM messages WHERE id = ?', [id]);
@@ -44,7 +52,10 @@ export const ChatRepository = {
   },
 
   async getMessagesByConvId(convId: string): Promise<Message[]> {
-    return await query<Message[]>('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC', [convId]);
+    return await query<Message[]>(
+      'SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, CASE WHEN role = \'user\' THEN 0 ELSE 1 END ASC, id ASC',
+      [convId]
+    );
   },
 
   async findMessagesByConversationId(convId: string): Promise<Message[]> {
@@ -63,7 +74,18 @@ export const ChatRepository = {
     await query('UPDATE conversations SET updated_at = ? WHERE id = ?', [updatedAt, id]);
   },
 
+  async updateConversationCategory(id: string, category: string): Promise<void> {
+    await query('UPDATE conversations SET category = ? WHERE id = ?', [category, id]);
+  },
+
   async saveUsageLog(log: any): Promise<void> {
+    // Cek duplikat dulu untuk menghindari ER_DUP_ENTRY
+    const existing = await querySingle('SELECT id FROM usage_logs WHERE id = ?', [log.id]);
+    if (existing) {
+      console.warn(`[ChatRepository] Usage log already exists, skipping: ${log.id}`);
+      return;
+    }
+
     await query(
       'INSERT INTO usage_logs (id, user_id, conversation_id, message_id, model_id, model_name, provider, input_tokens, output_tokens, input_cost, output_cost, total_cost, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [

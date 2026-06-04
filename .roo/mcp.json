@@ -1,3 +1,30 @@
 {
-	"mcpServers": {}
+	"mcpServers": {
+		"mysql-mcp": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@neverinfamous/mysql-mcp",
+				"--transport",
+				"stdio"
+			],
+			"env": {
+				"MYSQL_HOST": "localhost",
+				"MYSQL_PORT": "3306",
+				"MYSQL_USER": "root",
+				"MYSQL_PASSWORD": "ServBay.dev",
+				"MYSQL_DATABASE": "ai_chat_web"
+			},
+			"alwaysAllow": [
+				"mysql_read_query",
+				"mysql_describe_table",
+				"mysql_execute_code",
+				"mysql_transaction_begin",
+				"mysql_write_query",
+				"mysql_transaction_commit",
+				"mysql_list_tables",
+				"mysql_create_index"
+			]
+		}
+	}
 }

@@ -1,10 +1,11 @@
 import { ModelRepository } from '@/repositories/model.repo';
-import { query, querySimple, transaction } from '@/lib/db';
+import { query, querySimple, querySingle, transaction } from '@/lib/db';
 
 // Mock the database module with all required exports
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
   querySimple: jest.fn(),
+  querySingle: jest.fn(),
   transaction: jest.fn().mockImplementation(async (fn: (conn: { execute: jest.Mock }) => Promise<void>) => {
     const mockConn = { execute: jest.fn().mockResolvedValue([]) };
     await fn(mockConn);
@@ -85,16 +86,16 @@ describe('ModelRepository', () => {
   describe('getModelById', () => {
     it('should fetch model by id when exists', async () => {
       const mockModel = { id: '1', name: 'GPT-4', provider: 'openai' };
-      (querySimple as jest.Mock).mockResolvedValue(mockModel);
+      (querySingle as jest.Mock).mockResolvedValue(mockModel);
 
       const result = await ModelRepository.getModelById('1');
 
-      expect(querySimple).toHaveBeenCalledWith('SELECT * FROM models WHERE id = ?', ['1']);
+      expect(querySingle).toHaveBeenCalledWith('SELECT * FROM models WHERE id = ?', ['1']);
       expect(result).toEqual(mockModel);
     });
 
     it('should return null when model not found', async () => {
-      (querySimple as jest.Mock).mockResolvedValue(null);
+      (querySingle as jest.Mock).mockResolvedValue(null);
 
       const result = await ModelRepository.getModelById('nonexistent');
 

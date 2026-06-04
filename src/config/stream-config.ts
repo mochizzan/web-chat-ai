@@ -1,0 +1,5 @@
+export const FAKE_STREAM_CONFIG = {
+  MS_PER_WORD: 35,
+  AVG_WORD_LENGTH: 20,
+  FADE_IN_MS: 150,
+};

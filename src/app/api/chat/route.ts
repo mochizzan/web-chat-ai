@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { ChatOrchestratorService } from '@/services/chat-orchestrator.service';
 import { apiError } from '@/lib/api-response';
+import { ModelRepository } from '@/repositories/model.repo';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -14,21 +15,15 @@ export async function POST(request: NextRequest) {
       model: body.model,
       category: body.category,
       hasHistory: body.history?.length > 0,
-      thinkingEnabled: body.thinkingEnabled,
+      reasoningLevel: body.reasoningLevel,
       webSearchEnabled: body.webSearchEnabled
     });
     
-    const auth = verifyAuth(request);
-    if (!auth) {
-      console.log(`[${new Date().toISOString()}] [ChatAPI] POST: Unauthorized request`);
-      return apiError('Unauthorized: Please login to continue', 401, 'UNAUTHORIZED');
-    }
-
     const {
       message,
       model: modelId = 'gpt-4o',
       category = 'chat',
-      thinkingEnabled = false,
+      reasoningLevel = 'off',
       webSearchEnabled = false,
       history = [],
       conversationId,
@@ -43,17 +38,42 @@ export async function POST(request: NextRequest) {
       return apiError('Message is required and must be a non-empty string', 400, 'BAD_REQUEST');
     }
 
+    // Authenticate — allow anonymous access for free models
+    const auth = verifyAuth(request);
+    let userId: string | null;
+
+    if (auth) {
+      userId = auth.userId;
+    } else {
+      // Anonymous request: only allow if the requested model is free
+      let isFreeModel = false;
+      try {
+        const dbModel = await ModelRepository.getModelById(modelId);
+        isFreeModel = dbModel?.free === true || dbModel?.free === 1;
+      } catch (err) {
+        console.warn(`[ChatAPI] Model lookup failed:`, err);
+      }
+
+      if (!isFreeModel) {
+        console.log(`[${new Date().toISOString()}] [ChatAPI] POST: Unauthorized request - non-free or unknown model`);
+        return apiError('Silakan masuk dengan akun untuk melanjutkan.', 401, 'UNAUTHORIZED');
+      }
+
+      console.log(`[${new Date().toISOString()}] [ChatAPI] POST: Allowing anonymous access for free model`, { modelId });
+      userId = null;
+    }
+
     console.log(`[${new Date().toISOString()}] [ChatAPI] POST: Calling ChatOrchestratorService.streamChat`, {
-      userId: auth.userId,
+      userId: userId || 'anonymous',
       modelId,
       category,
       messageLength: message.length
     });
-    const stream = await ChatOrchestratorService.streamChat(auth.userId, {
+    const stream = await ChatOrchestratorService.streamChat(userId, {
       message,
       modelId,
       category,
-      thinkingEnabled,
+      reasoningLevel,
       webSearchEnabled,
       history,
       conversationId,

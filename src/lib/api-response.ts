@@ -30,13 +30,24 @@ export function apiSuccess<T>(data: T, status = 200) {
 /**
  * Standardized error response
  */
-export function apiError(message: string, status = 500, code = 'INTERNAL_SERVER_ERROR', details?: unknown) {
+export function apiError(message: string, status = 500, code?: string, details?: unknown) {
+  // Auto-map appropriate error codes based on HTTP status
+  const errorCode = code || (
+    status === 400 ? 'BAD_REQUEST'
+    : status === 401 ? 'UNAUTHORIZED'
+    : status === 403 ? 'FORBIDDEN'
+    : status === 404 ? 'NOT_FOUND'
+    : status === 409 ? 'CONFLICT'
+    : status === 422 ? 'VALIDATION_ERROR'
+    : status === 429 ? 'RATE_LIMITED'
+    : 'INTERNAL_SERVER_ERROR'
+  );
   return NextResponse.json(
     {
       success: false,
       error: {
         message,
-        code,
+        code: errorCode,
         details,
       },
     },

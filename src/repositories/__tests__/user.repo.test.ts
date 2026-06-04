@@ -89,20 +89,16 @@ describe('UserRepository', () => {
       };
 
       const mockConn = {
-        execute: jest.fn().mockResolvedValue([{ insertId: 1 }]),
+        execute: jest.fn()
+          .mockResolvedValueOnce([{ insertId: 1 }]) // For INSERT
+          .mockResolvedValueOnce([[{ id: userData.id, ...userData, created_at: new Date(), updated_at: new Date() }]]), // For SELECT
       };
-
-      const mockUser = {
-        ...userData,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-
-      mockedQuerySingle.mockResolvedValue(mockUser);
 
       const result = await UserRepository.create(userData, mockConn);
 
-      expect(mockConn.execute).toHaveBeenCalledWith(
+      expect(mockConn.execute).toHaveBeenCalledTimes(2);
+      expect(mockConn.execute).toHaveBeenNthCalledWith(
+        1,
         'INSERT INTO users (id, email, name, password, role, avatar, credit, total_spent, api_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           userData.id,
@@ -116,8 +112,16 @@ describe('UserRepository', () => {
           userData.api_key,
         ]
       );
-      expect(mockedQuerySingle).toHaveBeenCalledWith('SELECT * FROM users WHERE id = ?', [userData.id]);
-      expect(result).toEqual(mockUser);
+      expect(mockConn.execute).toHaveBeenNthCalledWith(
+        2,
+        'SELECT * FROM users WHERE id = ?',
+        [userData.id]
+      );
+      expect(result).toEqual({
+        ...userData,
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
+      });
     });
 
     it('should create user without connection', async () => {

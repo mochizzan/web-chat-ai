@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { BillingService } from '@/services/billing.service';
+import { UserNotFoundError } from '@/lib/errors';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,8 +35,11 @@ export async function POST(request: NextRequest) {
       amount: Number(amount),
     }, 200);
   } catch (error: unknown) {
-    const err = error as Error;
     console.error('Topup API error:', error);
+    if (error instanceof UserNotFoundError) {
+      return apiError('User account no longer exists. Please login again.', 401);
+    }
+    const err = error as Error;
     return apiError(err.message || 'Topup failed', 500);
   }
 }

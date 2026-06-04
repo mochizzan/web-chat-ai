@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import Image from 'next/image';
 import { useAdminAnalytics } from '@/hooks/useAdminAnalytics';
 import { AnalyticsChart } from '@/components/ui/analytics-chart';
 import {
@@ -18,16 +18,28 @@ import {
   TableCell,
   TableCaption,
 } from '@/components/ui/table';
-import { Bot, TrendingDown, Gauge } from 'lucide-react';
+import {
+  TrendingDown,
+  Gauge,
+  Users,
+  UserPlus,
+  Activity,
+  MessageSquare,
+  MessageCircle,
+  DollarSign,
+  PiggyBank,
+  Cpu,
+  Server,
+  CheckCircle,
+  Key,
+  KeyRound,
+  BarChart3,
+  Globe,
+} from 'lucide-react';
 import { formatCurrency8 } from '@/lib/admin-utils';
 
 export function AdminOverview() {
-  const { data, loading, error } = useAdminAnalytics('30d', 'day');
-  const [period, setPeriod] = useState('30d');
-
-  const handlePeriodChange = (p: string) => {
-    setPeriod(p);
-  };
+  const { data, loading, error, period, handlePeriodChange } = useAdminAnalytics('30d', 'day');
 
   if (loading) {
     return <div className="text-center py-8">Memuat data...</div>;
@@ -51,17 +63,85 @@ export function AdminOverview() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Total Users */}
         <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
           <CardContent className="p-4 h-[110px] flex flex-col justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4 text-foreground" />
+              <Users className="h-4 w-4 text-primary" />
               <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
                 Total Pengguna
               </span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{s.totalUsers || 0}</p>
+            <p className="text-2xl font-bold text-foreground">{s.totalUsers ?? 0}</p>
           </CardContent>
         </Card>
+
+        {/* Card 2: New Users 24h */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-green-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Pengguna Baru 24j
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.newUsers24h ?? 0}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: New Users 7d */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-emerald-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Pengguna Baru 7h
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.newUsers7d ?? 0}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Active Users 30d */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-blue-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Pengguna Aktif 30h
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.activeUsers30d ?? 0}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 5: Total Conversations */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-violet-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total Percakapan
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.totalConversations ?? 0}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 6: Total Messages */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-indigo-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total Pesan
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.totalMessages ?? 0}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 7: Total Revenue */}
         <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
           <CardContent className="p-4 h-[110px] flex flex-col justify-between">
             <div className="flex items-center gap-2">
@@ -71,10 +151,68 @@ export function AdminOverview() {
               </span>
             </div>
             <p className="text-2xl font-bold text-foreground font-mono">
-              {formatCurrency8(s.totalRevenue || 0)}
+              {formatCurrency8(s.totalRevenue ?? 0)}
             </p>
           </CardContent>
         </Card>
+
+        {/* Card 8: Total Cost */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-orange-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total Biaya
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground font-mono">
+              {formatCurrency8(s.totalCost ?? 0)}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Card 9: Profit */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <PiggyBank className="h-4 w-4 text-yellow-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Keuntungan
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground font-mono">
+              {formatCurrency8(s.profit ?? 0)}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Card 10: Total Requests */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-amber-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total Requests
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.totalRequests?.toLocaleString() ?? '0'}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 11: Total Tokens */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-cyan-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total Token
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.totalTokens?.toLocaleString() ?? '0'}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card 12: Avg Tokens/Request */}
         <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
           <CardContent className="p-4 h-[110px] flex flex-col justify-between">
             <div className="flex items-center gap-2">
@@ -84,21 +222,102 @@ export function AdminOverview() {
               </span>
             </div>
             <p className="text-2xl font-bold text-foreground">
-              {s.avgTokensPerRequest?.toFixed(2) || '0'}
+              {s.avgTokensPerRequest?.toLocaleString() ?? '0'}
             </p>
           </CardContent>
         </Card>
+
+        {/* Card 13: Total Models */}
         <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
           <CardContent className="p-4 h-[110px] flex flex-col justify-between">
             <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-amber-500" />
+              <Server className="h-4 w-4 text-purple-500" />
               <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                Total Requests
+                Total Model
               </span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{s.totalRequests?.toLocaleString() || '0'}</p>
+            <p className="text-2xl font-bold text-foreground">{s.totalModels ?? 0}</p>
           </CardContent>
         </Card>
+
+        {/* Card 14: Active Models */}
+        <Card className="border-border/40 hover:shadow-sm transition-all duration-200">
+          <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Model Aktif
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{s.activeModels ?? 0}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* BYOK Summary Cards */}
+      <div className="pt-2">
+        <div className="flex items-center gap-2 mb-4">
+          <Key className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-base font-semibold text-foreground">BYOK / API Gateway</h3>
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 ml-1">
+            Statistik API Key
+          </span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* BYOK Card 1: Total API Keys */}
+          <Card className="border-border/40 hover:shadow-sm transition-all duration-200 border-indigo-500/20">
+            <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-indigo-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  Total API Keys
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{s.byokTotalKeys ?? 0}</p>
+            </CardContent>
+          </Card>
+
+          {/* BYOK Card 2: Active API Keys */}
+          <Card className="border-border/40 hover:shadow-sm transition-all duration-200 border-indigo-500/20">
+            <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  API Key Aktif
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{s.byokActiveKeys ?? 0}</p>
+            </CardContent>
+          </Card>
+
+          {/* BYOK Card 3: Total BYOK Requests */}
+          <Card className="border-border/40 hover:shadow-sm transition-all duration-200 border-indigo-500/20">
+            <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-blue-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  BYOK Requests
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-foreground">{s.byokTotalRequests ?? 0}</p>
+            </CardContent>
+          </Card>
+
+          {/* BYOK Card 4: Total BYOK Cost */}
+          <Card className="border-border/40 hover:shadow-sm transition-all duration-200 border-indigo-500/20">
+            <CardContent className="p-4 h-[110px] flex flex-col justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-amber-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                  Total Biaya BYOK
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-foreground font-mono">
+                {formatCurrency8(s.byokTotalCost ?? 0)}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Separator className="my-6" />
@@ -152,6 +371,7 @@ export function AdminOverview() {
                   chartType="line"
                   labelKey="date"
                   valueKey="count"
+                  color="#3b82f6"
                   height={280}
                 />
               ) : (
@@ -173,6 +393,8 @@ export function AdminOverview() {
                   chartType="line"
                   labelKey="time"
                   valueKey="tokens"
+                  color="#f59e0b"
+                  valueFormat="token"
                   height={280}
                 />
               ) : (
@@ -198,6 +420,7 @@ export function AdminOverview() {
                   chartType="bar"
                   labelKey="name"
                   valueKey="requests"
+                  colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']}
                   height={280}
                 />
               ) : (
@@ -219,6 +442,8 @@ export function AdminOverview() {
                   chartType="pie"
                   labelKey="name"
                   valueKey="value"
+                  colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']}
+                  valueFormat="token"
                   height={300}
                   showLegend={true}
                   showTooltip={true}
@@ -230,6 +455,207 @@ export function AdminOverview() {
               )}
             </CardContent>
           </Card>
+        </div>
+      </div>
+
+      {/* BYOK Charts */}
+      <div className="space-y-6 mt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Key className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-base font-semibold text-foreground">BYOK / API Gateway Charts</h3>
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 ml-1">
+            Grafik Penggunaan API Key
+          </span>
+        </div>
+
+        {/* BYOK Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Line Chart: BYOK Requests over Time */}
+          <Card className="border-border/40 border-indigo-500/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">BYOK Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.byokUsageOverTime && data.byokUsageOverTime.length > 0 ? (
+                <AnalyticsChart
+                  data={data.byokUsageOverTime}
+                  chartType="line"
+                  labelKey="time"
+                  valueKey="tokens"
+                  color="#6366f1"
+                  valueFormat="token"
+                  height={280}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground">
+                  Belum ada data
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          {/* Bar Chart: BYOK Requests per Model */}
+          <Card className="border-border/40 border-indigo-500/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">BYOK Request per Model</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.byokRequestsPerModel && data.byokRequestsPerModel.length > 0 ? (
+                <AnalyticsChart
+                  data={data.byokRequestsPerModel}
+                  chartType="bar"
+                  labelKey="name"
+                  valueKey="requests"
+                  colors={['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#312e81', '#4338ca', '#4f46e5', '#6366f1']}
+                  height={280}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground">
+                  Belum ada data
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Top Users Table */}
+      <Separator className="my-6" />
+      <div>
+        <h3 className="text-md font-semibold text-foreground mb-4">
+          Top Pengguna (Berdasarkan Pengeluaran)
+        </h3>
+        <Table>
+          <TableCaption>10 pengguna dengan pengeluaran tertinggi</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nama</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead className="text-right">Total Dibelanjakan</TableHead>
+              <TableHead className="text-right">Kredit</TableHead>
+              <TableHead className="text-right">Total Request</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data?.topUsersBySpending && data.topUsersBySpending.length > 0 ? (
+              data.topUsersBySpending.map((user: any, idx: number) => (
+                <TableRow key={idx}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency8(user.totalSpent)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {user.credit?.toFixed(4)}
+                  </TableCell>
+                  <TableCell className="text-right">{user.requestCount}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                  Belum ada data pengguna
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* BYOK Tables */}
+      <Separator className="my-6" />
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Key className="h-5 w-5 text-indigo-500" />
+          <h3 className="text-base font-semibold text-foreground">BYOK / API Gateway Tables</h3>
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 ml-1">
+            Detail Penggunaan API Key
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top API Keys Table */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-3">
+              Top API Keys (Berdasarkan Request)
+            </h4>
+            <Table>
+              <TableCaption>10 API Key dengan request terbanyak</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nama Key</TableHead>
+                  <TableHead>Prefix</TableHead>
+                  <TableHead className="text-right">Request</TableHead>
+                  <TableHead className="text-right">Token</TableHead>
+                  <TableHead className="text-right">Biaya</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.topApiKeys && data.topApiKeys.length > 0 ? (
+                  data.topApiKeys.map((key: any, idx: number) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium">{key.name}</TableCell>
+                      <TableCell className="font-mono text-xs">{key.key_prefix}...</TableCell>
+                      <TableCell className="text-right">{key.requestCount}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {key.totalTokens?.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {formatCurrency8(key.totalCost)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                      Belum ada data API Key
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Top API Users Table */}
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-3">
+              Top BYOK Users (Berdasarkan Request)
+            </h4>
+            <Table>
+              <TableCaption>10 pengguna dengan request BYOK terbanyak</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nama</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Request</TableHead>
+                  <TableHead className="text-right">Token</TableHead>
+                  <TableHead className="text-right">Biaya</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.topApiUsers && data.topApiUsers.length > 0 ? (
+                  data.topApiUsers.map((user: any, idx: number) => (
+                    <TableRow key={idx}>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell className="text-right">{user.requestCount}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {user.totalTokens?.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {formatCurrency8(user.totalCost)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                      Belum ada data pengguna BYOK
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </div>

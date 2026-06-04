@@ -266,6 +266,51 @@ export const BillingRepository = {
     }
   },
 
+  /**
+   * Deduct credit with SQL-level negative balance guard.
+   * Uses WHERE credit >= ? to prevent balance going below zero.
+   * Returns true if deduction succeeded, false if insufficient credit.
+   */
+  async deductUserCredit(userId: string, amount: number, conn?: PoolConnection): Promise<boolean> {
+    console.log(`[${new Date().toISOString()}] [BillingRepository] deductUserCredit: Deducting user credit`, {
+      userId,
+      amount,
+      hasConnection: !!conn
+    });
+    const startTime = Date.now();
+    try {
+      const sql = 'UPDATE users SET credit = credit - ? WHERE id = ? AND credit >= ?';
+      const params = [amount, userId, amount];
+      let result: any;
+      
+      if (conn) {
+        [result] = await conn.execute(sql, params);
+      } else {
+        result = await query(sql, params);
+      }
+      
+      const affectedRows = result?.affectedRows ?? 0;
+      const success = affectedRows > 0;
+      
+      console.log(`[${new Date().toISOString()}] [BillingRepository] deductUserCredit: ${success ? 'Success' : 'Failed - insufficient credit'}`, {
+        userId,
+        amount,
+        affectedRows,
+        timeTaken: `${Date.now() - startTime}ms`
+      });
+      
+      return success;
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [BillingRepository] deductUserCredit: Error deducting credit`, {
+        userId,
+        amount,
+        error: String(error),
+        timeTaken: `${Date.now() - startTime}ms`
+      });
+      throw error;
+    }
+  },
+
   async getUserBalance(userId: string, conn?: PoolConnection): Promise<number | null> {
     console.log(`[${new Date().toISOString()}] [BillingRepository] getUserBalance: Getting user balance`, {
       userId,

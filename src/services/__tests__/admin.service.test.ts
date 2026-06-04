@@ -110,8 +110,8 @@ describe('AdminService', () => {
       const limit = 10;
       const search = 'test';
       const users = [
-        { id: '1', email: 'test1@example.com', name: 'Test 1', role: 'user', credit: 100, total_spent: 50 },
-        { id: '2', email: 'test2@example.com', name: 'Test 2', role: 'admin', credit: 200, total_spent: 100 },
+        { id: '1', email: 'test1@example.com', name: 'Test 1', role: 'user', credit: 100, total_spent: 50, totalSpent: 50 },
+        { id: '2', email: 'test2@example.com', name: 'Test 2', role: 'admin', credit: 200, total_spent: 100, totalSpent: 100 },
       ];
       const total = 2;
 

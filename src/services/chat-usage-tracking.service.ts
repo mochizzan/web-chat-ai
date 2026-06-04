@@ -130,7 +130,8 @@ export const ChatUsageTrackingService = {
   /**
    * Gets current user credit balance.
    */
-  async getCreditRemaining(userId: string): Promise<number> {
+  async getCreditRemaining(userId: string | null): Promise<number> {
+    if (!userId) return -1;
     try {
       const user = await UserRepository.findById(userId);
       return user ? Number(user.credit) : -1;

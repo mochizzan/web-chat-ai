@@ -8,5 +8,4 @@ export { MessageBubble } from './message-bubble';
 export { MessageList } from './message-list';
 export { ModelSelector } from './model-selector';
 export { Sidebar } from './sidebar';
-export { StreamingIndicator } from './streaming-indicator';
 export { TopBar } from './top-bar';

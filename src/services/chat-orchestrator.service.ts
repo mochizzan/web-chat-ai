@@ -5,55 +5,37 @@ import { ChatUsageTrackingService } from './chat-usage-tracking.service';
 import { ChatWebSearchService } from './chat-web-search.service';
 
 const CATEGORY_PROMPTS: Record<string, string> = {
-  chat:
-    'Anda adalah asisten AI yang ramah, cerdas, dan membantu. ' +
-    'Gunakan bahasa yang dipakai user. ' +
-    'Berikan jawaban akurat, ringkas, dan langsung ke intinya. ' +
-    'Jika diminta membuat/mengedit file, gunakan blok kode dengan nama file di header. ' +
-    'Saat memodifikasi file, outputkan SELURUH file yang sudah diperbarui.',
+  chat: `Anda adalah asisten AI serbaguna yang cerdas, ramah, dan adaptif.
+- Sesuaikan bahasa dan gaya bicara dengan user.
+- Berikan jawaban yang akurat, jelas, dan langsung pada intinya tanpa basa-basi yang berlebihan.
+- Gunakan format Markdown (seperti bold, list, atau tabel) untuk membuat jawaban lebih mudah dibaca.
+- Jika ditanya tentang kode, berikan snippet yang relevan dan jelaskan cara kerjanya secara singkat.`,
 
-  coding:
-    'AI Coding Assistant. Ikuti aturan ini KETAT.\n\n' +
-    '## DETEKSI JENIS REQUEST\n' +
-    '1.NEW: "buat/create" → full project structure + kode + setup\n' +
-    '2.FIX: "bug/error" → root cause analysis → kode lengkap + pencegahan\n' +
-    '3.UPDATE: "tambah/upgrade" → impact analysis → SEMUA file yang berubah\n' +
-    '4.DEBUG: "kenapa/trace" → step-by-step analysis, minta data jika kurang\n' +
-    '5.UI: "tampilan/layout" → responsive + a11y + states + deskripsi preview\n\n' +
-    '## RULES INTI (WAJIB)\n' +
-    '• KODE: Lengkap, no "..." / placeholder / TODO unimplemented\n' +
-    '• QUALITY: Production-ready (error handling, validasi, edge cases), no console.log final\n' +
-    '• TYPES: No `any`, explicit interface/type, gunakan generics/unions\n' +
-    '• CLEAN: SOLID/DRY, no magic values, nama deskriptif\n' +
-    '• SECURITY: Prevent XSS/injection, no hardcoded secrets, parameterized queries\n' +
-    '• PERF: Hindari N+1, gunakan caching, hindari blocking ops\n' +
-    '• TEST: Kode harus testable (DI/pure functions), sertakan pertimbangan testing\n' +
-    '• FORMAT: ```lang:path/file.ext (contoh: ```js:src/app.js)\n' +
-    '• DOCS: JSDoc untuk fungsi publik, komentar hanya untuk logika kompleks\n\n' +
-    '## DEFAULT & RESPON\n' +
-    '• Bahasa: Penjelasan ikut bahasa user, kode tetap Inggris\n' +
-    '• Stack default: HTML/CSS/JS sederhana, KECUALI user specify lain\n' +
-    '• Struktur: [Jenis] → [Analisis singkat] → [Kode lengkap] → [Catatan]\n' +
-    '• Jika ragu: Acknowledge limitation, jangan asumsi',
+  coding: `Anda adalah asisten programming yang ahli, praktis, dan solutif.
+- Berikan solusi kode yang bersih, efisien, dan langsung bisa dijalankan.
+- Selalu gunakan Markdown code blocks dengan bahasa yang sesuai (contoh: \`\`\`typescript).
+- Jelaskan logika atau cara kerja kode secara singkat setelah blok kode.
+- Terapkan best practices dasar (error handling, penamaan variabel yang jelas) tanpa terlalu kaku.
+- Jika ada beberapa pendekatan, berikan rekomendasi terbaik beserta alasannya.`,
 
-  research:
-    'Anda adalah asisten riset yang analitis dan objektif. ' +
-    'Berikan analisis mendalam, terstruktur, dan berbasis fakta. ' +
-    'Sertakan sumber referensi jika relevan. ' +
-    'Akui keterbatasan data secara eksplisit. ' +
-    'Format: pendahuluan → analisis → kesimpulan.',
+  research: `Anda adalah analis riset yang objektif, terstruktur, dan komprehensif.
+- Berikan penjelasan mendalam yang berbasis fakta dan data.
+- Gunakan struktur yang rapi seperti heading, bullet points, atau tabel untuk membandingkan informasi.
+- Sajikan berbagai sudut pandang jika topik tersebut memiliki pro dan kontra.
+- Bersikap transparan jika informasi terbatas atau di luar batas pengetahuan Anda.
+- Selalu akhiri dengan kesimpulan atau ringkasan yang jelas.`,
 
-  assistant:
-    'Anda adalah asisten AI produktif untuk tugas sehari-hari. ' +
-    'Ahli dalam menulis, mengedit, merangkum, menjawab pertanyaan faktual, ' +
-    'brainstorming, dan perencanaan. ' +
-    'Gunakan bahasa yang ramah namun profesional.',
+  assistant: `Anda adalah asisten produktivitas yang efisien, terorganisir, dan proaktif.
+- Fokus pada penyelesaian tugas seperti menulis draf, merangkum teks, brainstorming, atau membuat rencana.
+- Sajikan hasil kerja dengan format yang rapi dan langsung bisa digunakan oleh user.
+- Jika instruksi user terlalu ambigu, ajukan 1-2 pertanyaan singkat untuk mengklarifikasi sebelum mengerjakan.
+- Gunakan nada yang profesional, suportif, dan berorientasi pada hasil.`,
 
-  natural:
-    'Anda adalah teman ngobrol yang hangat dan natural. ' +
-    'Gunakan bahasa santai seperti obrolan sehari-hari. ' +
-    'Jangan kaku atau formal. Boleh ekspresif dan personal. ' +
-    'Respons singkat dan relevan.',
+  natural: `Anda adalah teman ngobrol yang asik, hangat, dan sangat natural.
+- Gunakan bahasa santai, kasual, dan ekspresif layaknya manusia yang sedang chatting.
+- Berikan respons yang singkat, relevan, dan memancing percakapan lebih lanjut.
+- HINDARI gaya bahasa kaku, formal, atau frasa khas AI seperti "Sebagai AI...", "Tentu, saya bisa membantu...", atau "Ada yang bisa saya bantu?".
+- Langsung masuk ke inti obrolan dan sesuaikan empati dengan konteks percakapan.`,
 };
 
 const OMNIROUTER_BASE = process.env.OMNIROUTER_BASE_URL || 'http://localhost:20128/v1';
@@ -112,7 +94,7 @@ export const ChatOrchestratorService = {
       message: string;
       modelId: string;
       category: string;
-      thinkingEnabled: boolean;
+      reasoningLevel: string;
       webSearchEnabled: boolean;
       history: any[];
       conversationId: string | null;
@@ -123,12 +105,15 @@ export const ChatOrchestratorService = {
       message,
       modelId,
       category,
-      thinkingEnabled,
+      reasoningLevel,
       webSearchEnabled,
       history,
       conversationId,
       timezone,
     } = params;
+
+    // Enforce: Disable web search for coding category
+    const effectiveWebSearch = category === 'coding' ? false : webSearchEnabled;
 
     const systemPrompt = CATEGORY_PROMPTS[category] || CATEGORY_PROMPTS.chat;
     const timeContext = buildTimeContext(timezone);
@@ -247,40 +232,63 @@ export const ChatOrchestratorService = {
           assistantMessageId: assistantMsgId,
         }));
 
-        // Phase 1: Web Search (delegate to ChatWebSearchService)
+        // Phase 1: Web Search dengan AI Intent Detection (toggle-aware)
         let webSearchContext = '';
-        if (webSearchEnabled && message.trim().length > 10) {
+        let webSearchRecommendation: { type: string; reasoning: string; message: string } | null = null;
+
+        if (category !== 'coding' && message.trim().length > 10) {
           try {
-            const intent = ChatWebSearchService.detectWebSearchIntent(message, category);
+            const intent = await ChatWebSearchService.detectWebSearchIntent(message, {
+              webSearchEnabled: effectiveWebSearch,
+              category,
+              conversationHistory: history,
+              modelId,
+            });
 
             if (intent.shouldSearch) {
-              safeEnqueue(sendEvent({
-                type: 'web_search',
-                status: 'searching',
-                message: '🔍 Mencari informasi di web...',
-                query: message.substring(0, 100),
-              }));
-
-              webSearchContext = await ChatWebSearchService.performWebSearch(message, {
-                maxResults: 5,
-                searchDepth: 'advanced',
-                category,
-              });
-
-              if (webSearchContext) {
-                const resultCount = (webSearchContext.match(/\[\d+\]/g) || []).length;
+              if (!effectiveWebSearch && intent.recommendToggle) {
+                // Toggle mati, AI merekomendasikan menyalakan
+                webSearchRecommendation = {
+                  type: 'toggle_recommendation',
+                  reasoning: intent.reasoning,
+                  message: 'Sebaiknya kamu nyalakan fitur Web Search terlebih dahulu untuk mendapatkan hasil pencarian yang akurat dan terkini.',
+                };
                 safeEnqueue(sendEvent({
                   type: 'web_search',
-                  status: 'results_found',
-                  message: `🌐 ${resultCount} hasil pencarian ditemukan`,
-                  resultCount,
+                  status: 'toggle_recommended',
+                  message: webSearchRecommendation.message,
+                  reasoning: intent.reasoning,
                 }));
-              } else {
+              } else if (effectiveWebSearch) {
+                // Toggle nyala, lakukan search dengan Tavily
                 safeEnqueue(sendEvent({
                   type: 'web_search',
-                  status: 'no_results',
-                  message: 'Tidak ada hasil web search yang relevan',
+                  status: 'searching',
+                  message: '🔍 Mencari informasi di web...',
+                  query: message.substring(0, 100),
                 }));
+
+                webSearchContext = await ChatWebSearchService.performWebSearch(message, {
+                  maxResults: 5,
+                  searchDepth: 'advanced',
+                  category,
+                });
+
+                if (webSearchContext) {
+                  const resultCount = (webSearchContext.match(/\[\d+\]/g) || []).length;
+                  safeEnqueue(sendEvent({
+                    type: 'web_search',
+                    status: 'results_found',
+                    message: `🌐 ${resultCount} hasil pencarian ditemukan`,
+                    resultCount,
+                  }));
+                } else {
+                  safeEnqueue(sendEvent({
+                    type: 'web_search',
+                    status: 'no_results',
+                    message: 'Tidak ada hasil web search yang relevan',
+                  }));
+                }
               }
             } else {
               safeEnqueue(sendEvent({
@@ -362,8 +370,8 @@ export const ChatOrchestratorService = {
           messages: llmMessages,
           stream: true,
         };
-        if (thinkingEnabled) {
-          omniBody.thinking = { type: 'enabled' };
+        if (reasoningLevel && reasoningLevel !== 'off') {
+          omniBody.reasoning_effort = 'high';
         }
 
         let omniResponse: Response;
@@ -435,7 +443,9 @@ export const ChatOrchestratorService = {
 
                 if (thinkingChunk && typeof thinkingChunk === 'string' && thinkingChunk.length > 0) {
                   fullThinkingContent += thinkingChunk;
-                  safeEnqueue(sendEvent({ type: 'thinking', content: thinkingChunk }));
+                  if (reasoningLevel !== 'off') {
+                    safeEnqueue(sendEvent({ type: 'thinking', content: thinkingChunk }));
+                  }
                 }
                 if (delta?.content && typeof delta.content === 'string') {
                   fullContent += delta.content;
@@ -488,7 +498,7 @@ export const ChatOrchestratorService = {
                 conversation_id: genConversationId,
                 role: 'assistant',
                 content: fullContent,
-                thinking_content: fullThinkingContent || null,
+                thinking_content: (reasoningLevel !== 'off' && fullThinkingContent) ? fullThinkingContent : null,
                 input_tokens: realInputTokens,
                 output_tokens: realOutputTokens,
                 input_cost: cost?.inputCost || 0,

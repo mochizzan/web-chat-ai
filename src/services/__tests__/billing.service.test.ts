@@ -241,6 +241,7 @@ describe('BillingService', () => {
 
       mockedBillingRepository.lockUserForUpdate.mockResolvedValue(undefined);
       mockedBillingRepository.getUserBalance.mockResolvedValue(currentBalance);
+      mockedBillingRepository.deductUserCredit.mockResolvedValue(true);
       mockedUserRepository.findById.mockResolvedValue({
         id: userId,
         credit: newBalance,
@@ -251,7 +252,7 @@ describe('BillingService', () => {
       expect(mockedTransaction).toHaveBeenCalledWith(expect.any(Function));
       expect(mockedBillingRepository.lockUserForUpdate).toHaveBeenCalledWith(userId, expect.any(Object));
       expect(mockedBillingRepository.getUserBalance).toHaveBeenCalledWith(userId, expect.any(Object));
-      expect(mockedBillingRepository.updateUserCredit).toHaveBeenCalledWith(userId, -amount, expect.any(Object));
+      expect(mockedBillingRepository.deductUserCredit).toHaveBeenCalledWith(userId, amount, expect.any(Object));
       expect(mockedBillingRepository.updateTotalSpent).toHaveBeenCalledWith(userId, amount, expect.any(Object));
       expect(mockedBillingRepository.saveCreditLog).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -301,7 +302,7 @@ describe('BillingService', () => {
       mockedBillingRepository.getUserBalance.mockResolvedValue(currentBalance);
 
       await expect(BillingService.deductCredit(userId, amount, 'test')).rejects.toThrow(
-        'Insufficient credit'
+        'Kredit tidak cukup'
       );
     });
 
@@ -312,7 +313,7 @@ describe('BillingService', () => {
 
       mockedBillingRepository.lockUserForUpdate.mockResolvedValue(undefined);
       mockedBillingRepository.getUserBalance.mockResolvedValue(currentBalance);
-      mockedBillingRepository.updateUserCredit.mockResolvedValue(undefined);
+      mockedBillingRepository.deductUserCredit.mockResolvedValue(true);
       mockedBillingRepository.updateTotalSpent.mockResolvedValue(undefined);
       mockedBillingRepository.saveCreditLog.mockRejectedValue(new Error('DB error'));
 

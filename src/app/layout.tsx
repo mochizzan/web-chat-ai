@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   keywords: ["MI-Labs", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI chat", "React"],
   authors: [{ name: "MI-Labs Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
   openGraph: {
     title: "MI-Labs Chat",

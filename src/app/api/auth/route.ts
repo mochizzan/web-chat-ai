@@ -33,25 +33,34 @@ export async function POST(request: NextRequest) {
     if (data.action === 'login') {
       result = await AuthService.login({ email: data.email, password: data.password });
     } else {
-      const user = await AuthService.register({ email: data.email, name: data.name, password: data.password });
-      const token = AuthService.generateToken(user);
-      result = { user, token };
+      const registerResult = await AuthService.register({ email: data.email, name: data.name, password: data.password });
+      const token = AuthService.generateToken(registerResult.user);
+      result = { 
+        user: registerResult.user, 
+        token,
+        needsVerification: registerResult.needsVerification 
+      };
     }
 
     const response = apiSuccess(result, data.action === 'login' ? 200 : 201);
-
-    response.cookies.set('auth_token', result.token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+ 
+    // Only set auth token if user is logged in and doesn't need verification
+    if (data.action === 'login' || (data.action === 'register' && !result.needsVerification)) {
+      response.cookies.set('auth_token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      });
+    }
 
     return response;
   } catch (error: unknown) {
     const err = error as Error;
-    const status = err.message.includes('already exists') ? 409 : (err.message.includes('Invalid') ? 401 : 400);
+    const status = err.message.includes('already exists') ? 409 
+      : err.message.includes('belum diverifikasi') ? 403
+      : (err.message.includes('Invalid') || err.message.includes('tidak valid') ? 401 : 400);
     return apiError(err.message || 'Authentication error', status);
   }
 }

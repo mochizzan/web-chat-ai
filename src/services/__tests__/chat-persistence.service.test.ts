@@ -206,17 +206,29 @@ describe('ChatPersistenceService', () => {
   });
 
   describe('saveMessage', () => {
-    it('should save a message successfully', async () => {
+    it('should save a message successfully with valid conversation', async () => {
       const message = {
         id: 'msg-123',
         conversation_id: 'conv-123',
-        role: 'user',
+        role: 'user' as const,
         content: 'Hello',
       };
+      const mockConversation = {
+        id: 'conv-123',
+        user_id: 'user-123',
+        title: 'Test Chat',
+        model: 'gpt-4o',
+        category: 'assistant',
+        pinned: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      mockedChatRepository.findConversationById.mockResolvedValue(mockConversation);
       mockedChatRepository.saveMessage.mockResolvedValue(undefined);
 
       await ChatPersistenceService.saveMessage(message);
 
+      expect(mockedChatRepository.findConversationById).toHaveBeenCalledWith('conv-123');
       expect(mockedChatRepository.saveMessage).toHaveBeenCalledWith(message);
     });
   });
@@ -263,7 +275,9 @@ describe('ChatPersistenceService', () => {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      mockedChatRepository.findConversationById.mockResolvedValue(null);
+      mockedChatRepository.findConversationById
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockConversation);
       mockedChatRepository.createConversation.mockResolvedValue(mockConversation);
 
       const result = await ChatPersistenceService.ensureConversation(null, userId, message, modelId, category);
@@ -273,7 +287,8 @@ describe('ChatPersistenceService', () => {
         userId,
         'Hello',
         modelId,
-        category
+        category,
+        expect.stringMatching(/^conv_/)
       );
       expect(result).toMatch(/^conv_/);
     });
@@ -319,7 +334,9 @@ describe('ChatPersistenceService', () => {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      mockedChatRepository.findConversationById.mockResolvedValue(null);
+      mockedChatRepository.findConversationById
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockConversation);
       mockedChatRepository.createConversation.mockResolvedValue(mockConversation);
 
       const result = await ChatPersistenceService.ensureConversation(null, userId, longMessage, modelId, category);
@@ -328,9 +345,119 @@ describe('ChatPersistenceService', () => {
         userId,
         longMessage.substring(0, 100) + '...',
         modelId,
-        category
+        category,
+        expect.stringMatching(/^conv_/)
       );
       expect(result).toMatch(/^conv_/);
     });
   });
+
+ describe('validateConversationId', () => {
+   it('should return true if conversation exists', async () => {
+     const conversationId = 'conv-123';
+     const mockConversation = {
+       id: conversationId,
+       user_id: 'user-123',
+       title: 'Test Chat',
+       model: 'gpt-4o',
+       category: 'assistant',
+       pinned: 0,
+       created_at: new Date(),
+       updated_at: new Date(),
+     };
+     mockedChatRepository.findConversationById.mockResolvedValue(mockConversation);
+
+     const result = await ChatPersistenceService.validateConversationId(conversationId);
+
+     expect(result).toBe(true);
+     expect(mockedChatRepository.findConversationById).toHaveBeenCalledWith(conversationId);
+   });
+
+   it('should return false if conversation not found', async () => {
+     const conversationId = 'nonexistent-conv';
+     mockedChatRepository.findConversationById.mockResolvedValue(null);
+
+     const result = await ChatPersistenceService.validateConversationId(conversationId);
+
+     expect(result).toBe(false);
+   });
+
+   it('should return false on error', async () => {
+     const conversationId = 'conv-123';
+     mockedChatRepository.findConversationById.mockRejectedValue(new Error('DB error'));
+
+     const result = await ChatPersistenceService.validateConversationId(conversationId);
+
+     expect(result).toBe(false);
+   });
+ });
+
+ describe('saveMessage with validation and retry', () => {
+   it('should throw error for invalid conversation_id', async () => {
+     const message = {
+       id: 'msg-123',
+       conversation_id: 'nonexistent-conv',
+       role: 'user' as const,
+       content: 'Hello',
+     };
+     mockedChatRepository.findConversationById.mockResolvedValue(null);
+
+     await expect(ChatPersistenceService.saveMessage(message)).rejects.toThrow(
+       'INVALID_CONVERSATION'
+     );
+   });
+
+   it('should save message successfully for valid conversation', async () => {
+     const message = {
+       id: 'msg-123',
+       conversation_id: 'conv-123',
+       role: 'user' as const,
+       content: 'Hello',
+     };
+     const mockConversation = {
+       id: 'conv-123',
+       user_id: 'user-123',
+       title: 'Test Chat',
+       model: 'gpt-4o',
+       category: 'assistant',
+       pinned: 0,
+       created_at: new Date(),
+       updated_at: new Date(),
+     };
+     mockedChatRepository.findConversationById.mockResolvedValue(mockConversation);
+     mockedChatRepository.saveMessage.mockResolvedValue(undefined);
+
+     await ChatPersistenceService.saveMessage(message);
+
+     expect(mockedChatRepository.findConversationById).toHaveBeenCalledWith('conv-123');
+     expect(mockedChatRepository.saveMessage).toHaveBeenCalledWith(message);
+   });
+
+   it('should retry on save failure', async () => {
+     const message = {
+       id: 'msg-123',
+       conversation_id: 'conv-123',
+       role: 'user' as const,
+       content: 'Hello',
+     };
+     const mockConversation = {
+       id: 'conv-123',
+       user_id: 'user-123',
+       title: 'Test Chat',
+       model: 'gpt-4o',
+       category: 'assistant',
+       pinned: 0,
+       created_at: new Date(),
+       updated_at: new Date(),
+     };
+     mockedChatRepository.findConversationById.mockResolvedValue(mockConversation);
+     mockedChatRepository.saveMessage
+       .mockRejectedValueOnce(new Error('DB error'))
+       .mockResolvedValueOnce(undefined);
+
+     await ChatPersistenceService.saveMessage(message);
+
+     expect(mockedChatRepository.saveMessage).toHaveBeenCalledTimes(2);
+   });
+ });
 });

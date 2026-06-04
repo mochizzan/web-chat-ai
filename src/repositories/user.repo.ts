@@ -3,11 +3,18 @@ import type { PoolConnection } from 'mysql2/promise';
 import { User, UserRole } from '@/types';
 
 export const UserRepository = {
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string, conn?: PoolConnection): Promise<User | null> {
     console.log(`[${new Date().toISOString()}] [UserRepository] findById: Querying user by ID`, { id });
     const startTime = Date.now();
     try {
-      const result = await querySingle<User>('SELECT * FROM users WHERE id = ?', [id]);
+      let result;
+      if (conn) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const [rows] = await (conn as any).execute('SELECT * FROM users WHERE id = ?', [id]);
+        result = rows.length > 0 ? rows[0] as User : null;
+      } else {
+        result = await querySingle<User>('SELECT * FROM users WHERE id = ?', [id]);
+      }
       console.log(`[${new Date().toISOString()}] [UserRepository] findById: Successfully found user`, {
         id,
         found: result !== null,
@@ -55,21 +62,24 @@ export const UserRepository = {
     });
     const startTime = Date.now();
     
+    // Convert undefined to null for SQL compatibility
+    const nullify = (val: unknown) => (val === undefined ? null : val);
+    
     try {
       if (conn) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (conn as any).execute(
           'INSERT INTO users (id, email, name, password, role, avatar, credit, total_spent, api_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, email, name, password, role, avatar, credit, total_spent, api_key]
+          [nullify(id), nullify(email), nullify(name), nullify(password), nullify(role), nullify(avatar), nullify(credit), nullify(total_spent), nullify(api_key)]
         );
       } else {
         await query(
           'INSERT INTO users (id, email, name, password, role, avatar, credit, total_spent, api_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [id, email, name, password, role, avatar, credit, total_spent, api_key]
+          [nullify(id), nullify(email), nullify(name), nullify(password), nullify(role), nullify(avatar), nullify(credit), nullify(total_spent), nullify(api_key)]
         );
       }
       
-      const user = await this.findById(id!);
+      const user = await this.findById(id!, conn);
       if (!user) throw new Error('User creation failed: User not found after insert');
       console.log(`[${new Date().toISOString()}] [UserRepository] create: Successfully created user`, {
         id,

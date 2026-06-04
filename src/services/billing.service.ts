@@ -4,6 +4,7 @@ import { UserRepository } from '@/repositories/user.repo';
 import { NotificationService } from '@/services/notification.service';
 import { CreditLog } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { UserNotFoundError } from '@/lib/errors';
 
 export const BillingService = {
   /**
@@ -14,7 +15,7 @@ export const BillingService = {
     const user = await UserRepository.findById(userId);
     if (!user) {
       console.log(`[${new Date().toISOString()}] [BillingService] checkSufficientCredit: User not found`, { userId });
-      throw new Error('User not found');
+      throw new UserNotFoundError();
     }
     const hasSufficientCredit = user.credit >= estimatedCost;
     console.log(`[${new Date().toISOString()}] [BillingService] checkSufficientCredit: Credit check result`, {
@@ -34,7 +35,7 @@ export const BillingService = {
     const user = await UserRepository.findById(userId);
     if (!user) {
       console.log(`[${new Date().toISOString()}] [BillingService] getAccountDetails: User not found`, { userId });
-      throw new Error('User not found');
+      throw new UserNotFoundError();
     }
 
     console.log(`[${new Date().toISOString()}] [BillingService] getAccountDetails: Fetching credit logs`, { userId });
@@ -113,7 +114,7 @@ export const BillingService = {
       await NotificationService.broadcast({
         type: 'credit:update',
         userId: userId,
-        newBalance: user.credit,
+        newBalance: Number(user.credit),
       });
       console.log(`[${new Date().toISOString()}] [BillingService] processTopup: Successfully completed top-up`, {
         userId,
@@ -155,7 +156,7 @@ export const BillingService = {
           currentBalance,
           amount
         });
-        throw new Error('Insufficient credit');
+        throw new Error('Insufficient credit: Kredit tidak cukup. Silakan lakukan top-up terlebih dahulu.');
       }
   
       const newBalance = currentBalance - amount;
@@ -164,8 +165,11 @@ export const BillingService = {
         newBalance
       });
   
-      // Update balance
-      await BillingRepository.updateUserCredit(userId, -amount, conn);
+      // Update balance with SQL-level negative guard
+      const deducted = await BillingRepository.deductUserCredit(userId, amount, conn);
+      if (!deducted) {
+        throw new Error('Insufficient credit: Kredit tidak cukup. Silakan lakukan top-up terlebih dahulu.');
+      }
       
       // Update total spent
       await BillingRepository.updateTotalSpent(userId, amount, conn);
@@ -185,6 +189,7 @@ export const BillingService = {
         amount: -amount,
         balance: newBalance,
         description: description,
+        created_at: new Date(),
       }, conn);
     });
 
@@ -195,7 +200,7 @@ export const BillingService = {
       await NotificationService.broadcast({
         type: 'credit:update',
         userId: userId,
-        newBalance: user.credit,
+        newBalance: Number(user.credit),
       });
       console.log(`[${new Date().toISOString()}] [BillingService] deductCredit: Successfully completed deduction`, {
         userId,

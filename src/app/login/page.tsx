@@ -1,35 +1,43 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
+import { LogIn, UserPlus, ArrowLeft } from 'lucide-react';
 
-import { Bot, LogIn, UserPlus, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-import { useChatDataStore } from '@/lib/store';
+import { useChatDataStore, UserProfile } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
-
-type AuthTab = 'login' | 'register';
+import { useAuthForm } from '@/hooks/useAuthForm';
+import { useAuthValidation } from '@/hooks/useAuthValidation';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { loginUser, registerUser, resendVerification } from '@/services/auth-api';
+import { AuthHeader } from '@/components/auth/auth-header';
+import { AuthTabSwitcher } from '@/components/auth/auth-tab-switcher';
+import { AuthFormField } from '@/components/auth/auth-form-field';
+import { EmailVerificationDialog } from '@/components/auth/email-verification-dialog';
 
 export default function LoginPage() {
+  // 0. Dynamic page title
+  usePageTitle('Sign In');
+
   const router = useRouter();
-  
   const { toast } = useToast();
   const { isLoggedIn, login, setCredit } = useChatDataStore();
-
-  const [activeTab, setActiveTab] = useState<AuthTab>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
+  
+  const {
+    activeTab, email, setEmail, password, setPassword, name, setName,
+    showPassword, setShowPassword, loading, setLoading, errors, setErrors,
+    clearFieldError, switchTab, resetForm
+  } = useAuthForm();
+  
+  const { validateLogin, validateRegister } = useAuthValidation();
   const pageRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  
+  // State for email verification dialog
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -52,297 +60,168 @@ export default function LoginPage() {
     return () => ctx.revert();
   }, []);
 
-  // Validate login form
-  const validateLogin = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (!email.trim()) {
-      newErrors.email = 'Email wajib diisi';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Format email tidak valid (contoh: user@mail.com)';
+  const handleLogin = async () => {
+    const validationErrors = validateLogin(email, password);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
     }
-    if (!password.trim()) {
-      newErrors.password = 'Password wajib diisi';
-    } else if (password.length < 3) {
-      newErrors.password = 'Password minimal 3 karakter';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [email, password]);
-
-  // Validate register form
-  const validateRegister = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (!name.trim()) {
-      newErrors.name = 'Nama wajib diisi';
-    } else if (name.trim().length < 2) {
-      newErrors.name = 'Nama minimal 2 karakter';
-    }
-    if (!email.trim()) {
-      newErrors.email = 'Email wajib diisi';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !/^[a-zA-Z0-9_]+$/.test(email)) {
-      newErrors.email = 'Format email tidak valid';
-    }
-    if (!password.trim()) {
-      newErrors.password = 'Password wajib diisi';
-    } else if (password.length < 3) {
-      newErrors.password = 'Password minimal 3 karakter';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [name, email, password]);
-
-  // Handle login — calls /api/auth directly (loginUser removed from store)
-  const handleLogin = useCallback(async () => {
-    if (!validateLogin()) return;
+    
     setLoading(true);
-
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', email: email.trim(), password }),
-      });
-      const json = await response.json();
-
-      if (response.ok) {
-        const payload = json.data || json;
-        const userData = payload.user;
-        login(userData);
-        setCredit(userData?.credit ?? 0);
-        toast({ title: 'Berhasil Masuk', description: 'Selamat datang kembali!' });
-        router.push('/');
-      } else {
-        const message = json.message || 'Email atau password salah';
-        toast({ title: 'Gagal Masuk', description: message, variant: 'destructive' });
-        const fieldErrors: Record<string, string> = {};
-        if (message.toLowerCase().includes('email')) {
-          fieldErrors.email = message;
-        } else {
-          fieldErrors.password = message;
+      const json = await loginUser(email, password);
+      if (json.success) {
+        const userData = json.data?.user;
+        if (userData) {
+          login(userData);
+          // Credit is set separately from user data
+          toast({ title: 'Berhasil Masuk', description: 'Selamat datang kembali!' });
+          router.push('/');
         }
-        setErrors(fieldErrors);
+      } else {
+        const message = json.error?.message || json.message || 'Email atau password salah';
+        
+        if (message.toLowerCase().includes('belum diverifikasi')) {
+          setVerificationEmail(email);
+          setShowVerification(true);
+          // Auto-resend OTP so user immediately receives a fresh code
+          resendVerification(email).then(() => {
+            toast({
+              title: 'Kode Terkirim',
+              description: 'Kode verifikasi baru telah dikirim ke email Anda',
+            });
+          }).catch(() => {
+            toast({
+              title: 'Gagal Mengirim Kode',
+              description: 'Gagal mengirim ulang kode verifikasi. Klik "Kirim Ulang" untuk mencoba lagi.',
+              variant: 'destructive',
+            });
+          });
+        } else {
+          toast({ title: 'Gagal Masuk', description: message, variant: 'destructive' });
+          setErrors({ [message.toLowerCase().includes('email') ? 'email' : 'password']: message });
+        }
       }
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Terjadi kesalahan sistem saat login',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Terjadi kesalahan sistem saat login', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [email, password, validateLogin, login, setCredit, router, toast]);
+  };
 
-  // Handle register — calls /api/auth directly (registerUser removed from store)
-  const handleRegister = useCallback(async () => {
-    if (!validateRegister()) return;
+  const handleRegister = async () => {
+    const validationErrors = validateRegister(name, email, password);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    
     setLoading(true);
-
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'register', name: name.trim(), email: email.trim(), password }),
-      });
-      const json = await response.json();
-
-      if (response.ok) {
-        const payload = json.data || json;
-        const userData = payload.user;
-        login(userData);
-        setCredit(userData?.credit ?? 0);
-        toast({ title: 'Akun Dibuat!', description: `Selamat datang, ${name.trim()}!` });
-        router.push('/');
+      const json = await registerUser(name, email, password);
+      if (json.success) {
+        // Check if verification is needed
+        if (json.data?.needsVerification) {
+          setVerificationEmail(email);
+          setShowVerification(true);
+          toast({
+            title: 'Akun Dibuat!',
+            description: `Kode verifikasi telah dikirim ke ${email}`
+          });
+        } else {
+          const userData = json.data?.user;
+          if (userData) {
+            login(userData);
+            toast({ title: 'Akun Dibuat!', description: `Selamat datang, ${name.trim()}!` });
+            router.push('/');
+          }
+        }
       } else {
         const message = json.message || 'Gagal membuat akun';
         toast({ title: 'Gagal Mendaftar', description: message, variant: 'destructive' });
-        const fieldErrors: Record<string, string> = {};
-        if (message.toLowerCase().includes('email')) {
-          fieldErrors.email = message;
-        } else if (message.toLowerCase().includes('nama')) {
-          fieldErrors.name = message;
-        } else if (message.toLowerCase().includes('password')) {
-          fieldErrors.password = message;
-        } else {
-          fieldErrors.email = message;
-        }
-        setErrors(fieldErrors);
       }
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Terjadi kesalahan sistem saat mendaftar',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Terjadi kesalahan sistem saat mendaftar', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  }, [name, email, password, validateRegister, login, setCredit, router, toast]);
+  };
 
-  // Handle Enter key
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        if (activeTab === 'login') handleLogin();
-        else handleRegister();
-      }
-    },
-    [activeTab, handleLogin, handleRegister]
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      activeTab === 'login' ? handleLogin() : handleRegister();
+    }
+  };
 
-  // Switch tab - clear errors
-  const switchTab = useCallback((tab: AuthTab) => {
-    setActiveTab(tab);
-    setErrors({});
-  }, []);
+  // Show verification dialog if needed
+  if (showVerification) {
+    return <EmailVerificationDialog email={verificationEmail} onVerified={() => {
+      resetForm();
+      setVerificationEmail('');
+      switchTab('login');
+      setShowVerification(false);
+    }} />;
+  }
 
   return (
-    <div
-      ref={pageRef}
-      className="flex min-h-dvh w-full items-center justify-center bg-background p-4"
-    >
-      {/* Background decoration - subtle */}
+    <div ref={pageRef} className="flex min-h-dvh w-full items-center justify-center bg-background p-4">
+      {/* Background decoration */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/3 blur-3xl" />
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-primary/3 blur-3xl" />
       </div>
 
-      {/* Login Card */}
-      <div
-        ref={cardRef}
-        className="relative z-10 w-full max-w-md"
-      >
+      <div ref={cardRef} className="relative z-10 w-full max-w-md">
         <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
-          {/* Header */}
-          <div className="px-8 pt-8 pb-6 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/40">
-              <Bot className="h-7 w-7 text-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">
-              MI-Labs Chat
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Masuk ke akun Anda untuk memulai
-            </p>
-          </div>
+          <AuthHeader />
 
           {/* Tab Switcher */}
           <div className="px-8 pb-2">
-            <div className="flex rounded-xl bg-muted/40 p-1">
-              <button
-                onClick={() => switchTab('login')}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
-                  activeTab === 'login'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <LogIn className="h-4 w-4" />
-                Masuk
-              </button>
-              <button
-                onClick={() => switchTab('register')}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
-                  activeTab === 'register'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <UserPlus className="h-4 w-4" />
-                Daftar
-              </button>
-            </div>
+            <AuthTabSwitcher activeTab={activeTab} onTabChange={switchTab} />
           </div>
 
           {/* Form */}
           <div className="px-8 pt-4 pb-6">
             <div className="space-y-4">
-              {/* Name field (register only) */}
               {activeTab === 'register' && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-xs font-semibold text-muted-foreground">
-                    Nama Lengkap
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Masukkan nama lengkap"
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
-                    }}
-                    onKeyDown={handleKeyDown}
-                    className={`h-11 text-sm ${errors.name ? 'border-destructive focus-visible:ring-destructive/30' : ''}`}
-                    autoComplete="name"
-                  />
-                  {errors.name && (
-                    <p className="text-xs text-destructive">{errors.name}</p>
-                  )}
-                </div>
+                <AuthFormField
+                  id="name"
+                  label="Nama Lengkap"
+                  value={name}
+                  placeholder="Masukkan nama lengkap"
+                  error={errors.name}
+                  onChange={(val) => { setName(val); clearFieldError('name'); }}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="name"
+                />
               )}
 
-              {/* Email field */}
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-semibold text-muted-foreground">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder="Masukkan email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
-                  }}
-                  onKeyDown={handleKeyDown}
-                  className={`h-11 text-sm ${errors.email ? 'border-destructive focus-visible:ring-destructive/30' : ''}`}
-                  autoComplete="email"
-                />
-                {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email}</p>
-                )}
-              </div>
+              <AuthFormField
+                id="email"
+                label="Email"
+                type="text"
+                value={email}
+                placeholder="Masukkan email"
+                error={errors.email}
+                onChange={(val) => { setEmail(val); clearFieldError('email'); }}
+                onKeyDown={handleKeyDown}
+                autoComplete="email"
+              />
 
-              {/* Password field */}
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-semibold text-muted-foreground">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Masukkan password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
-                    }}
-                    onKeyDown={handleKeyDown}
-                    className={`h-11 text-sm pr-10 ${errors.password ? 'border-destructive focus-visible:ring-destructive/30' : ''}`}
-                    autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password}</p>
-                )}
-              </div>
+              <AuthFormField
+                id="password"
+                label="Password"
+                value={password}
+                placeholder="Masukkan password"
+                error={errors.password}
+                showPasswordToggle
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                onChange={(val) => { setPassword(val); clearFieldError('password'); }}
+                onKeyDown={handleKeyDown}
+                autoComplete={activeTab === 'login' ? 'current-password' : 'new-password'}
+              />
 
-              {/* Submit button */}
               <Button
                 className="w-full h-11 text-sm font-bold"
                 onClick={activeTab === 'login' ? handleLogin : handleRegister}
@@ -366,7 +245,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </div>
-
           </div>
 
           {/* Back to chat link */}

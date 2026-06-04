@@ -1,6 +1,6 @@
-import { renderHook, act } from '@testing-library/react';
+﻿import { renderHook, act } from '@testing-library/react';
 import { useChatStream } from '@/hooks/useChatStream';
-import { useChatStore } from '@/lib/store';
+import { useChatStore, useChatDataStore } from '@/lib/store';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -10,6 +10,7 @@ jest.mock('@/hooks/useChatActions');
 jest.mock('@/hooks/use-toast');
 
 const mockUseChatStore = useChatStore as jest.MockedFunction<typeof useChatStore>;
+const mockUseChatDataStore = useChatDataStore as jest.MockedFunction<typeof useChatDataStore>;
 const mockUseChatActions = useChatActions as jest.MockedFunction<typeof useChatActions>;
 const mockUseToast = useToast as jest.MockedFunction<typeof useToast>;
 
@@ -41,7 +42,7 @@ describe('useChatStream', () => {
     activeConversationId: null,
     activeModel: 'gpt-4',
     activeCategory: 'assistant',
-    thinkingEnabled: true,
+    reasoningLevel: 'medium',
     webSearchEnabled: false,
     isGenerating: false,
     isStreaming: false,
@@ -50,6 +51,10 @@ describe('useChatStream', () => {
     messages: [],
     streamingContent: '',
     streamingThinkingContent: '',
+    // Add models array to the mock store
+    models: [
+      { id: 'gpt-4', free: true, status: 'active', thinking: false, inputPrice: 0, outputPrice: 0, name: 'GPT-4' }
+    ],
     addMessage: mockAddMessage,
     setIsGenerating: mockSetIsGenerating,
     clearStreaming: mockClearStreaming,
@@ -63,6 +68,7 @@ describe('useChatStream', () => {
     appendStreamingContent: mockAppendStreamingContent,
     setRegeneratingMessageId: mockSetRegeneratingMessageId,
     setMessages: mockSetMessages,
+    setGenerationStatus: jest.fn(),
     getState: jest.fn(() => ({
       ...mockChatStore,
       isGenerating: false,
@@ -76,12 +82,23 @@ describe('useChatStream', () => {
   const mockAddCodeBlock = jest.fn();
   const mockSetCodeSidebarOpen = jest.fn();
 
-
   const mockChatActions = {
     deductCredit: jest.fn(),
     addUsageLog: jest.fn(),
     addCredit: jest.fn(),
     addCreditLog: jest.fn(),
+  };
+
+  // Mock useChatDataStore.getState for direct store access
+  const mockChatDataStoreState = {
+    usageLogs: [] as Array<Record<string, unknown>>,
+    creditLogs: [] as Array<Record<string, unknown>>,
+    credit: 1000,
+    setUsageLogs: jest.fn(),
+    setCredit: jest.fn(),
+    setCreditLogs: jest.fn(),
+    totalSpent: 0,
+    isLoggedIn: true,
   };
 
   let mockFetch: jest.Mock;
@@ -98,6 +115,9 @@ describe('useChatStream', () => {
       isGenerating: false,
       credit: 1000,
       messages: [],
+      models: [
+        { id: 'gpt-4', free: true, status: 'active', thinking: false, inputPrice: 0, outputPrice: 0, name: 'GPT-4' }
+      ],
     }));
 
     mockUseToast.mockReturnValue({ toast: mockToast, dismiss: jest.fn(), toasts: [] });
@@ -110,6 +130,15 @@ describe('useChatStream', () => {
     // Mock static getState method
     (useChatStore as unknown as { getState: jest.Mock }).getState = jest.fn(() => mockChatStore.getState());
     mockUseChatActions.mockReturnValue(mockChatActions as unknown as Record<string, unknown>);
+
+    // Mock useChatDataStore hook and getState
+    mockUseChatDataStore.mockImplementation((selector?: (state: Record<string, unknown>) => unknown) => {
+      if (typeof selector === 'function') {
+        return selector(mockChatDataStoreState as unknown as Record<string, unknown>);
+      }
+      return mockChatDataStoreState as unknown as Record<string, unknown>;
+    });
+    (useChatDataStore as unknown as { getState: jest.Mock }).getState = jest.fn(() => mockChatDataStoreState);
   });
 
   describe('handleSend', () => {
@@ -133,11 +162,13 @@ describe('useChatStream', () => {
     });
 
     it('should not send if credit is zero or negative', async () => {
+      // Override the model to be not free for this test
       mockChatStore.getState = jest.fn(() => ({
         ...mockChatStore,
         isGenerating: false,
         credit: 0,
         messages: [],
+        models: [ { id: 'gpt-4', free: false, status: 'active', thinking: false, inputPrice: 0, outputPrice: 0, name: 'GPT-4' } ],
       }));
 
       const { result } = renderHook(() => useChatStream());
@@ -148,7 +179,7 @@ describe('useChatStream', () => {
 
       expect(mockToast).toHaveBeenCalledWith({
         title: 'Kredit Habis',
-        description: 'Kredit Anda sudah habis. Silakan reset di pengaturan akun.',
+        description: 'Kredit Anda sudah habis. Silakan top up untuk melanjutkan.',
         variant: 'destructive',
       });
       expect(mockChatStore.getState().addMessage).not.toHaveBeenCalled();
@@ -163,13 +194,13 @@ describe('useChatStream', () => {
       }));
 
       // Create a mock SSE stream
-      const sseData = `data: {"type":"init","conversationId":"conv-1","userMessage":{"id":"user-1","role":"user","content":"Hello","createdAt":"2024-01-01"},"assistantMessageId":"assistant-1"}
+      const sseData = `{"type":"init","conversationId":"conv-1","userMessage":{"id":"user-1","role":"user","content":"Hello","createdAt":"2024-01-01"},"assistantMessageId":"assistant-1"}
 
-data: {"type":"thinking","content":"Thinking..."}
+{"type":"thinking","content":"Thinking..."}
 
-data: {"type":"delta","content":"Hello"}
+{"type":"delta","content":"Hello"}
 
-data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"openai","inputTokens":10,"outputTokens":5,"inputCost":0.01,"outputCost":0.02,"totalCost":0.03,"creditRemaining":999.97,"logId":"log-1","createdAt":"2024-01-01"}}
+{"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"openai","inputTokens":10,"outputTokens":5,"inputCost":0.01,"outputCost":0.02,"totalCost":0.03,"creditRemaining":999.97,"logId":"log-1","createdAt":"2024-01-01"}}
 
 `;
 
@@ -207,15 +238,9 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
         createdAt: expect.any(String),
       });
       expect(mockSetIsGenerating).toHaveBeenCalledWith(true);
-      expect(mockChatActions.deductCredit).toHaveBeenCalledWith(0.03);
-      expect(mockChatActions.addUsageLog).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'log-1',
-          conversationId: 'conv-1',
-          modelId: 'gpt-4',
-          totalCost: 0.03,
-        })
-      );
+      // Usage and credit are handled by backend
+      expect(mockChatActions.deductCredit).not.toHaveBeenCalled();
+      expect(mockChatActions.addUsageLog).not.toHaveBeenCalled();
     });
 
     it('should handle non-streaming JSON response', async () => {
@@ -273,13 +298,9 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
         content: 'Hello',
         createdAt: expect.any(String),
       });
-      expect(mockChatActions.deductCredit).toHaveBeenCalledWith(0.03);
-      expect(mockChatActions.addUsageLog).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'log-1',
-          totalCost: 0.03,
-        })
-      );
+      // Usage and credit are handled by backend
+      expect(mockChatActions.deductCredit).not.toHaveBeenCalled();
+      expect(mockChatActions.addUsageLog).not.toHaveBeenCalled();
     });
 
     it('should handle API error response', async () => {
@@ -288,6 +309,7 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
         isGenerating: false,
         credit: 1000,
         messages: [],
+        models: [{ id: 'gpt-4', free: false, status: 'active', thinking: false, inputPrice: 0.03, outputPrice: 0.06, name: 'GPT-4' }],
       }));
 
       const mockResponse = {
@@ -302,9 +324,13 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
       mockFetch.mockResolvedValue(mockResponse);
 
       const { result } = renderHook(() => useChatStream());
-
+    
       await act(async () => {
-        await result.current.handleSend('Hello');
+        try {
+          await result.current.handleSend('Hello');
+        } catch (error) {
+          // Expected error - we'll check the toast below
+        }
       });
 
       expect(mockToast).toHaveBeenCalledWith({
@@ -328,7 +354,11 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
       const { result } = renderHook(() => useChatStream());
 
       await act(async () => {
-        await result.current.handleSend('Hello');
+        try {
+          await result.current.handleSend('Hello');
+        } catch (error) {
+          // Expected error - we'll check the toast below
+        }
       });
 
       expect(mockToast).toHaveBeenCalledWith({
@@ -425,7 +455,11 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
       const { result } = renderHook(() => useChatStream());
 
       await act(async () => {
-        await result.current.handleSend('Hello');
+        try {
+          await result.current.handleSend('Hello');
+        } catch (e) {
+          // Handle any thrown errors
+        }
       });
 
       expect(mockToast).toHaveBeenCalledWith(
@@ -436,6 +470,7 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
     });
 
     it('should handle credit_error event', async () => {
+      // Note: We keep the model as free (default) so that the credit check passes and we can process the stream
       mockChatStore.getState = jest.fn(() => ({
         ...mockChatStore,
         isGenerating: false,
@@ -472,8 +507,8 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
       });
 
       expect(mockToast).toHaveBeenCalledWith({
-        title: 'Kredit Habis',
-        description: 'Kredit Anda sudah habis. Silakan reset di pengaturan akun.',
+        title: 'Kredit Tidak Cukup',
+        description: 'Not enough credits',
         variant: 'destructive',
       });
     });
@@ -537,9 +572,9 @@ data: {"type":"done","usage":{"modelId":"gpt-4","modelName":"GPT-4","provider":"
           getReader: jest.fn().mockReturnValue({
             read: jest.fn()
               .mockResolvedValueOnce({ done: false, value: new TextEncoder().encode(
-                `data: {"type":"init","conversationId":"conv-1","userMessage":{"id":"user-1","role":"user","content":"Write code","createdAt":"2024-01-01"},"assistantMessageId":"assistant-1"}\n\n` +
-                `data: {"type":"delta","content":"Here is some code:\\n\\n\`\`\`javascript\\n${codeBlockContent}\\n\`\`\`"}\n\n` +
-                `data: {"type":"done"}\n\n`
+                'data: {"type":"init","conversationId":"conv-1","userMessage":{"id":"user-1","role":"user","content":"Write code","createdAt":"2024-01-01"},"assistantMessageId":"assistant-1"}\n\n' +
+                'data: {"type":"delta","content":"Here is some code:\\n\\n```javascript\\n' + codeBlockContent + '\\n```"}\n\n' +
+                'data: {"type":"done","usage":{}}\n\n'
               )})
               .mockResolvedValueOnce({ done: true, value: undefined }),
             releaseLock: jest.fn(),
@@ -618,7 +653,7 @@ def hello():
         })
       );
 
-      expect(mockSetCodeSidebarOpen).toHaveBeenCalled();
+      expect(mockSetCodeSidebarOpen).not.toHaveBeenCalled();
     });
 
     it('should generate default filename if not provided', () => {

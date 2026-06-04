@@ -1,10 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useCallback } from 'react';
 import gsap from 'gsap';
-import { Menu, PanelLeft, MessageSquare, Activity, Coins, Receipt, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { Menu, PanelLeft, MessageSquare, Activity, Coins, Receipt, ArrowDownToLine, ArrowUpFromLine, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
   TooltipContent,
@@ -13,28 +20,78 @@ import {
 } from '@/components/ui/tooltip';
 import { ModelSelector } from './model-selector';
 import { MarqueeText } from '@/components/ui/marquee-text';
-import { useChatStore } from '@/lib/store';
+import { useChatStore, useChatDataStore } from '@/lib/store';
 import { useMounted } from '@/hooks/use-mounted';
+import { cn } from '@/lib/utils';
 
-const CATEGORY_COLORS: Record<string, { badge: string; dot: string }> = {
-  chat:      { badge: 'bg-muted/30 text-muted-foreground border-border/20',           dot: 'bg-muted-foreground' },
-  coding:    { badge: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/15', dot: 'bg-sky-500' },
-  research:  { badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/15', dot: 'bg-violet-500' },
-  assistant: { badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15', dot: 'bg-emerald-500' },
-  natural:   { badge: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/15', dot: 'bg-orange-500' },
-  agent:     { badge: 'bg-muted/30 text-muted-foreground border-border/20',           dot: 'bg-muted-foreground' },
-  imagen:    { badge: 'bg-muted/30 text-muted-foreground border-border/20',           dot: 'bg-muted-foreground' },
-};
+// ─────────────────────────────────────────────────────────
+// Category definitions — warna sesuai per kategori
+// ─────────────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<string, string> = {
-  chat: 'Chat',
-  coding: 'Coding',
-  research: 'Research',
-  assistant: 'Assistant',
-  natural: 'Natural',
-  agent: 'Agent',
-  imagen: 'Imagen',
-};
+export interface CategoryDef {
+  id: string;
+  label: string;
+  badge: string;        // Tailwind classes untuk badge
+  dot: string;          // Tailwind classes untuk dot indicator
+  menuItem: string;     // Tailwind classes untuk item dropdown
+  dotColor: string;     // Tailwind classes untuk dot di dropdown
+}
+
+export const CATEGORIES: CategoryDef[] = [
+  {
+    id: 'chat',
+    label: 'Chat',
+    badge: 'bg-muted/30 text-muted-foreground border-border/20 hover:bg-muted/50',
+    dot: 'bg-muted-foreground',
+    menuItem: 'text-muted-foreground',
+    dotColor: 'bg-muted-foreground',
+  },
+  {
+    id: 'coding',
+    label: 'Coding',
+    badge: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/15 hover:bg-sky-500/20',
+    dot: 'bg-sky-500',
+    menuItem: 'text-sky-600 dark:text-sky-400',
+    dotColor: 'bg-sky-500',
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    badge: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/15 hover:bg-violet-500/20',
+    dot: 'bg-violet-500',
+    menuItem: 'text-violet-600 dark:text-violet-400',
+    dotColor: 'bg-violet-500',
+  },
+  {
+    id: 'assistant',
+    label: 'Assistant',
+    badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15 hover:bg-emerald-500/20',
+    dot: 'bg-emerald-500',
+    menuItem: 'text-emerald-600 dark:text-emerald-400',
+    dotColor: 'bg-emerald-500',
+  },
+  {
+    id: 'natural',
+    label: 'Natural',
+    badge: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/15 hover:bg-orange-500/20',
+    dot: 'bg-orange-500',
+    menuItem: 'text-orange-600 dark:text-orange-400',
+    dotColor: 'bg-orange-500',
+  },
+];
+
+// backward-compat map for colors (still used by sidebar, etc.)
+export const CATEGORY_COLORS: Record<string, { badge: string; dot: string }> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.id, { badge: c.badge, dot: c.dot }])
+);
+
+// Fallback for agent/imagen (sidebar modes, not selectable in dropdown)
+CATEGORY_COLORS['agent']  = { badge: 'bg-muted/30 text-muted-foreground border-border/20', dot: 'bg-muted-foreground' };
+CATEGORY_COLORS['imagen'] = { badge: 'bg-muted/30 text-muted-foreground border-border/20', dot: 'bg-muted-foreground' };
+
+export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.id, c.label])
+);
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -61,6 +118,7 @@ function safeNum(n: number): number {
 export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) {
   const { activeCategory, activeConversationId, conversations, sidebarOpen, usageLogs, messages } =
     useChatStore();
+  const { setActiveCategory, updateConversationCategory } = useChatDataStore();
   const mounted = useMounted();
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -79,13 +137,10 @@ export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) 
   );
 
   // Compute SESSION stats — only from current conversation's usage logs
-  // Uses deduplication by log ID to prevent inflated counts
   const sessionStats = useMemo(() => {
-    // New chat (no active conversation) → always show 0
     if (!activeConversationId) {
       return { totalRequests: 0, totalInputTokens: 0, totalOutputTokens: 0, totalTokens: 0, totalSpent: 0 };
     }
-    // Filter by conversation and deduplicate by ID (safety against duplicate log entries)
     const seenIds = new Set<string>();
     const sessionLogs = usageLogs.filter((l) => {
       if (l.conversationId !== activeConversationId) return false;
@@ -102,6 +157,40 @@ export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) 
   }, [usageLogs, activeConversationId]);
 
   const hasChatStarted = messages.length > 0;
+
+  // ─── Category change handler ───────────────────────────────────────
+  const handleCategoryChange = useCallback(
+    async (categoryId: string) => {
+      if (categoryId === activeCategory) return;
+
+      // 1. Update local state immediately (optimistic)
+      setActiveCategory(categoryId);
+
+      // 2. Jika ada active conversation, sync ke backend
+      if (activeConversationId) {
+        updateConversationCategory(activeConversationId, categoryId);
+        try {
+          await fetch(`/api/conversations/${activeConversationId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category: categoryId }),
+          });
+        } catch {
+          // Silent fail — state lokal sudah terupdate, non-critical
+          console.warn('[TopBar] Failed to sync category to backend');
+        }
+      }
+    },
+    [activeCategory, activeConversationId, setActiveCategory, updateConversationCategory]
+  );
+
+  // Cari definisi kategori aktif
+  const activeCategoryDef = CATEGORIES.find((c) => c.id === activeCategory);
+  const activeBadgeClass = activeCategoryDef?.badge
+    || 'bg-muted/30 text-muted-foreground border-border/20 hover:bg-muted/50';
+
+  // Kategori yang bisa dipilih di dropdown (kecuali agent & imagen yang merupakan sidebar modes)
+  const selectableCategories = CATEGORIES;
 
   return (
     <div
@@ -151,7 +240,7 @@ export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) 
         <ModelSelector />
       </div>
 
-      {/* Right: session stats + badge (shrink-0) */}
+      {/* Right: session stats + category dropdown badge (shrink-0) */}
       <div className="flex items-center gap-1.5 shrink-0 ml-2">
         {/* Session stats — only when chat has started */}
         {hasChatStarted && mounted && (
@@ -214,21 +303,59 @@ export function TopBar({ onToggleSidebar, onToggleMobileSidebar }: TopBarProps) 
           </TooltipProvider>
         )}
 
-        <Badge
-          variant="outline"
-          className={`text-xs font-medium capitalize hidden sm:flex gap-1 items-center border ${
-            CATEGORY_COLORS[activeCategory]?.badge || 'bg-muted/30 text-muted-foreground border-border/20'
-          }`}
-        >
-          {activeCategory === 'chat' ? (
-            'Chat'
-          ) : (
-            <>
-              Chat<span className="text-muted-foreground/40 mx-0.5">+</span>
-              <span className="font-semibold">{CATEGORY_LABELS[activeCategory] || activeCategory}</span>
-            </>
-          )}
-        </Badge>
+        {/* ── Category Dropdown Badge ── */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                'hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium',
+                'transition-colors duration-150 cursor-pointer outline-none',
+                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                activeBadgeClass
+              )}
+            >
+              {/* Dot indicator */}
+              <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', activeCategoryDef?.dot || 'bg-muted-foreground')} />
+              {activeCategory === 'chat' ? (
+                'Chat'
+              ) : (
+                <>
+                  Chat<span className="text-muted-foreground/40 mx-0.5">+</span>
+                  <span className="font-semibold">{CATEGORY_LABELS[activeCategory] || activeCategory}</span>
+                </>
+              )}
+              <ChevronDown className="h-3 w-3 ml-0.5 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44 p-1">
+            <DropdownMenuLabel className="text-[11px] font-semibold text-muted-foreground px-2 py-1">
+              Pilih Mode AI
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="my-0.5" />
+            {selectableCategories.map((cat) => (
+              <DropdownMenuItem
+                key={cat.id}
+                className={cn(
+                  'flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer text-xs',
+                  'focus:bg-accent',
+                  cat.id === activeCategory && 'font-semibold'
+                )}
+                onSelect={() => handleCategoryChange(cat.id)}
+              >
+                {/* Color dot */}
+                <span className={cn('w-2 h-2 rounded-full shrink-0', cat.dotColor)} />
+                {/* Label */}
+                <span className={cn('flex-1', cat.menuItem)}>
+                  {cat.id === 'chat' ? 'Chat' : `Chat + ${cat.label}`}
+                </span>
+                {/* Checkmark untuk kategori aktif */}
+                {cat.id === activeCategory && (
+                  <Check className="h-3.5 w-3.5 shrink-0 text-current opacity-70" />
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

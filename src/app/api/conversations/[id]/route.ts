@@ -28,6 +28,33 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const auth = verifyAuth(request);
+    if (!auth) {
+      return apiError('Unauthorized: Please login to continue', 401, 'UNAUTHORIZED');
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { category } = body;
+
+    if (!category || typeof category !== 'string') {
+      return apiError('category is required and must be a string', 400, 'BAD_REQUEST');
+    }
+
+    await ChatPersistenceService.updateConversationCategory(id, category);
+    return apiSuccess({ success: true, id, category }, 200);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('Conversation PATCH error:', error);
+    return apiError(err.message || 'Failed to update conversation', 500, 'INTERNAL_SERVER_ERROR');
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

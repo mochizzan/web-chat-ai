@@ -6,6 +6,7 @@ import { persist } from 'zustand/middleware';
 // ─────────────────────────────────────────────
 
 export type ModelStatus = 'active' | 'maintenance' | 'disabled';
+export type ReasoningLevel = 'off' | 'low' | 'medium' | 'high' | 'xhigh';
 
 export interface Message {
   id: string;
@@ -35,6 +36,7 @@ export type DiscountType = 'none' | 'input' | 'output' | 'both';
 
 export interface Model {
   id: string;
+  publicId?: string;  // custom public ID for BYOK API exposure
   name: string;
   provider: string;
   description: string;
@@ -65,6 +67,8 @@ export interface CodeBlock {
 
 export type CodeBlockInput = Omit<CodeBlock, 'version' | 'createdAt' | 'updatedAt' | 'opened'>;
 
+export type UsageLogSource = 'chat' | 'api';
+
 export interface UsageLogEntry {
   id: string;
   conversationId: string | null;
@@ -78,11 +82,12 @@ export interface UsageLogEntry {
   totalCost: number;
   category: string;
   createdAt: string;
+  source: UsageLogSource;
 }
 
 export interface CreditLogEntry {
   id: string;
-  type: 'topup' | 'usage';
+  type: 'topup' | 'usage' | 'bonus';
   amount: number; // positive for topup, negative for usage
   balance: number; // balance after this transaction
   description: string;
@@ -116,6 +121,7 @@ interface UIState {
   streamingThinkingContent: string;
   isStreaming: boolean;
   isThinkingStreaming: boolean;
+  generationStatus: string;
 
   // ─── UI Actions ───────────────────────────────
   setSidebarOpen: (open: boolean) => void;
@@ -171,8 +177,16 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ streamingThinkingContent: state.streamingThinkingContent + chunk })),
       setIsStreaming: (streaming) => set({ isStreaming: streaming }),
       setIsThinkingStreaming: (streaming) => set({ isThinkingStreaming: streaming }),
-      clearStreaming: () =>
-        set({ streamingContent: '', streamingThinkingContent: '', isStreaming: false, isThinkingStreaming: false }),
+      setGenerationStatus: (status) => set({ generationStatus: status }),
+      clearStreaming: () => {
+        // Cleanup orphaned streaming blocks from data store
+        const dataState = useChatDataStore.getState();
+        dataState.setCodeBlocks(dataState.codeBlocks.filter((b) => b.messageId !== 'streaming'));
+        if (dataState.selectedCodeBlock?.messageId === 'streaming') {
+          dataState.setSelectedCodeBlock(null);
+        }
+        set({ streamingContent: '', streamingThinkingContent: '', isStreaming: false, isThinkingStreaming: false, generationStatus: '' });
+      },
     }),
     {
       name: 'z-ai-ui-store',
@@ -203,7 +217,7 @@ export interface ChatDataState {
   creditLogs: CreditLogEntry[];
   user: UserProfile | null;
   isLoggedIn: boolean;
-  thinkingEnabled: boolean;
+  reasoningLevel: ReasoningLevel;
   webSearchEnabled: boolean;
 
   // ─── Data Actions ─────────────────────────────
@@ -218,6 +232,7 @@ export interface ChatDataState {
   setConversations: (conversations: ConversationPreview[]) => void;
   addConversation: (conversation: ConversationPreview) => void;
   updateConversationLastMessage: (id: string, lastMessage: ConversationPreview['lastMessage'], updatedAt?: string) => void;
+  updateConversationCategory: (id: string, category: string) => void;
   removeConversation: (id: string) => void;
   setModels: (models: Model[]) => void;
   addModel: (model: Model) => void;
@@ -244,9 +259,8 @@ export interface ChatDataState {
   addUserCredit: (userId: string, amount: number) => void;
   resetAccount: () => void;
   resetChat: () => void;
-  setThinkingEnabled: (enabled: boolean) => void;
+  setReasoningLevel: (level: ReasoningLevel) => void;
   setWebSearchEnabled: (enabled: boolean) => void;
-  toggleThinking: () => void;
 }
 
 const DEFAULT_MODELS: Model[] = [];
@@ -268,7 +282,7 @@ export const useChatDataStore = create<ChatDataState>()(
       creditLogs: [],
       user: null,
       isLoggedIn: false,
-      thinkingEnabled: true,
+      reasoningLevel: 'medium',
       webSearchEnabled: false,
 
       setActiveConversationId: (id) => set({ activeConversationId: id }),
@@ -305,6 +319,12 @@ export const useChatDataStore = create<ChatDataState>()(
             c.id === id
               ? { ...c, lastMessage, updatedAt: updatedAt || new Date().toISOString() }
               : c
+          ),
+        })),
+      updateConversationCategory: (id, category) =>
+        set((state) => ({
+          conversations: state.conversations.map((c) =>
+            c.id === id ? { ...c, category } : c
           ),
         })),
       removeConversation: (id) =>
@@ -437,7 +457,27 @@ export const useChatDataStore = create<ChatDataState>()(
 
       // ─── Pure auth state setters (no async logic) ───
       setUser: (user) => set({ user, isLoggedIn: !!user }),
-      login: (user) => set({ user, isLoggedIn: true }),
+      login: (user) =>
+        set((state) => {
+          // ── Clean up anonymous data from localStorage ──
+          const anonConversations = state.conversations.filter((c) =>
+            c.id.startsWith('conv_anon_')
+          );
+          anonConversations.forEach((c) => {
+            localStorage.removeItem(`anon_conversation_${c.id}`);
+          });
+          localStorage.removeItem('anonymous_trial_count');
+
+          return {
+            user,
+            isLoggedIn: true,
+            conversations: state.conversations.filter(
+              (c) => !c.id.startsWith('conv_anon_')
+            ),
+            messages: [],
+            activeConversationId: null,
+          };
+        }),
       logout: () =>
         set({
           user: null,
@@ -472,20 +512,28 @@ export const useChatDataStore = create<ChatDataState>()(
           messages: [],
           codeBlocks: [],
           selectedCodeBlock: null,
-          usageLogs: [],
         }),
 
-      setThinkingEnabled: (enabled) => set({ thinkingEnabled: enabled }),
+      setReasoningLevel: (level) => set({ reasoningLevel: level }),
       setWebSearchEnabled: (enabled) => set({ webSearchEnabled: enabled }),
-      toggleThinking: () => set((state) => ({ thinkingEnabled: !state.thinkingEnabled })),
       setCreditLogs: (logs) => set({ creditLogs: logs }),
     }),
     {
       name: 'z-ai-chat-store',
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        // Migrate from v0 (thinkingEnabled boolean) to v1 (reasoningLevel)
+        if (version === 0) {
+          const oldThinkingEnabled: boolean | undefined = persistedState?.thinkingEnabled;
+          persistedState.reasoningLevel = oldThinkingEnabled ? 'medium' : 'off';
+          delete persistedState.thinkingEnabled;
+        }
+        return persistedState as ChatDataState;
+      },
       partialize: (state) => ({
         activeModel: state.activeModel,
         activeCategory: state.activeCategory,
-        thinkingEnabled: state.thinkingEnabled,
+        reasoningLevel: state.reasoningLevel,
         webSearchEnabled: state.webSearchEnabled,
         models: state.models,
         user: state.user
@@ -494,8 +542,10 @@ export const useChatDataStore = create<ChatDataState>()(
         isLoggedIn: state.isLoggedIn,
         // Persist as cache so data doesn't vanish on refresh
         conversations: state.conversations,
-        usageLogs: state.usageLogs.slice(0, 100),
+        usageLogs: state.usageLogs.slice(0, 500),
         creditLogs: state.creditLogs.slice(0, 50),
+        credit: state.credit,
+        totalSpent: state.totalSpent,
       }),
     }
   )

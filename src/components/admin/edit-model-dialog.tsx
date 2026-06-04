@@ -25,6 +25,7 @@ export function EditModelDialog({ model, open, onOpenChange, onSave }: EditModel
         name: model.name,
         provider: model.provider,
         description: model.description,
+        publicId: model.publicId || '',
         status: model.status,
         maxContext: model.maxContext,
         thinking: model.thinking,
@@ -93,6 +94,26 @@ export function EditModelDialog({ model, open, onOpenChange, onSave }: EditModel
                 placeholder="Deskripsi model"
                 className="bg-background"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="publicId" className="flex items-center gap-2">
+                Public ID (BYOK)
+                {formData.publicId && (
+                  <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    🔑 Ekspos ke API
+                  </span>
+                )}
+              </Label>
+              <Input
+                id="publicId"
+                value={formData.publicId || ''}
+                onChange={(e) => updateField('publicId', e.target.value || '')}
+                placeholder="milabs/nama-model (kosongkan untuk tidak tampil di API)"
+                className="bg-background font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                ID model yang akan tampil di endpoint <code className="text-xs">/v1/models</code>. Biarkan kosong jika model tidak perlu diekspos.
+              </p>
             </div>
           </div>
 

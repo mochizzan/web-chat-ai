@@ -1,6 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { query, querySimple } from '@/lib/db';
+import { query, querySingle, querySimple } from '@/lib/db';
 import { Model } from '@/types';
+
+/** Mapping from frontend camelCase field names to database snake_case column names */
+const COLUMN_MAP: Record<string, string> = {
+  inputPrice: 'input_price',
+  outputPrice: 'output_price',
+  maxContext: 'max_context',
+  discountPercent: 'discount_percent',
+  discountType: 'discount_type',
+  publicId: 'public_id',
+};
 
 export const ModelRepository = {
   async getModels(filters: { all?: boolean; provider?: string }): Promise<Model[]> {
@@ -25,7 +35,17 @@ export const ModelRepository = {
   },
 
   async getModelById(id: string): Promise<Model | null> {
-    return await querySimple<Model>('SELECT * FROM models WHERE id = ?', [id]);
+    return await querySingle<Model>('SELECT * FROM models WHERE id = ?', [id]);
+  },
+
+  async findByPublicId(publicId: string): Promise<Model | null> {
+    return await querySingle<Model>('SELECT * FROM models WHERE public_id = ?', [publicId]);
+  },
+
+  async getModelsWithPublicId(): Promise<Model[]> {
+    return await query<Model[]>(
+      "SELECT * FROM models WHERE public_id IS NOT NULL AND public_id != '' AND status = 'active' ORDER BY public_id ASC"
+    );
   },
 
   async updateModel(id: string, updates: Partial<Model>): Promise<void> {
@@ -34,7 +54,8 @@ export const ModelRepository = {
 
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
-        fields.push(`${key} = ?`);
+        const dbColumn = COLUMN_MAP[key] ?? key; // map camelCase → snake_case
+        fields.push(`${dbColumn} = ?`);
         params.push(value);
       }
     }
@@ -83,10 +104,13 @@ export const ModelRepository = {
 
     let created = 0, updated = 0, disabled = 0;
 
+    console.log(`[ModelRepository] Starting model sync. Existing models: ${existingModels.length}, Remote models: ${validModels.length}`);
+
     await transaction(async (conn) => {
       // 1. Disable models that exist in DB but are NOT in the remote pull
       for (const existing of existingModels) {
         if (!remoteIds.has(existing.id) && existing.status === 'active') {
+          console.log(`[ModelRepository] Disabling model ${existing.id} (not in remote pull)`);
           await conn.execute(
             'UPDATE models SET status = ? WHERE id = ?',
             ['disabled', existing.id]
@@ -112,8 +136,8 @@ export const ModelRepository = {
           : JSON.stringify(model);
 
         await conn.execute(
-          `INSERT INTO models (id, name, provider, description, status, max_context, thinking, input_price, output_price, free, speed, discount_percent, discount_type, sync_data)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO models (id, public_id, name, provider, description, status, max_context, thinking, input_price, output_price, free, speed, discount_percent, discount_type, sync_data)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON DUPLICATE KEY UPDATE
              name = VALUES(name),
              provider = VALUES(provider),
@@ -122,10 +146,11 @@ export const ModelRepository = {
              thinking = VALUES(thinking),
              speed = VALUES(speed),
              sync_data = VALUES(sync_data)`,
-          // NOTE: status, input_price, output_price, free, discount_percent, discount_type
+          // NOTE: public_id, status, input_price, output_price, free, discount_percent, discount_type
           // are intentionally excluded from ON DUPLICATE KEY UPDATE — these are admin-controlled settings
           [
             safe(model.id),
+            null, // public_id: never overwritten by sync
             safe(model.name),
             safe(model.provider),
             safe(model.description),
@@ -142,9 +167,17 @@ export const ModelRepository = {
           ]
         );
 
-        isExisting ? updated++ : created++;
+        if (isExisting) {
+          updated++;
+          console.log(`[ModelRepository] Updated model ${model.id}`);
+        } else {
+          created++;
+          console.log(`[ModelRepository] Created new model ${model.id}`);
+        }
       }
     });
+
+    console.log(`[ModelRepository] Sync completed. Created: ${created}, Updated: ${updated}, Disabled: ${disabled}`);
 
     return { created, updated, disabled };
   }

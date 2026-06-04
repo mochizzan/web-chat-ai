@@ -416,9 +416,21 @@ export function CodeSidebar() {
     );
   }, [codeBlocks]);
 
+  // Deduplicate: keep only the latest version per fileName (defense-in-depth)
+  const filteredCodeBlocks = useMemo(() => {
+    const latest = new Map<string, CodeBlock>();
+    codeBlocks.forEach((b) => {
+      const existing = latest.get(b.fileName);
+      if (!existing || (b.version || 1) > (existing.version || 1)) {
+        latest.set(b.fileName, b);
+      }
+    });
+    return Array.from(latest.values());
+  }, [codeBlocks]);
+
   // Grouped code blocks for rendering (mapped as array for direct JSX iteration)
   const groupedEntries: { groupName: string; blocks: CodeBlock[] }[] = useMemo(() => {
-    const sorted = [...codeBlocks].sort((a, b) => {
+    const sorted = [...filteredCodeBlocks].sort((a, b) => {
       const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
       const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
       return timeB - timeA;
@@ -442,8 +454,8 @@ export function CodeSidebar() {
 
   // Count unique file names
   const uniqueFileCount = useMemo(() => {
-    return new Set(codeBlocks.map((b) => b.fileName)).size;
-  }, [codeBlocks]);
+    return new Set(filteredCodeBlocks.map((b) => b.fileName)).size;
+  }, [filteredCodeBlocks]);
 
   // Count unopened files
   const unopenedCount = useMemo(() => {

@@ -32,7 +32,7 @@ describe('useAuthSession', () => {
     codeBlocks: [],
     selectedCodeBlock: null,
     creditLogs: [],
-    thinkingEnabled: true,
+    reasoningLevel: 'medium',
     webSearchEnabled: false,
 
     login: jest.fn().mockImplementation((user) => {
@@ -90,9 +90,8 @@ describe('useAuthSession', () => {
     addUserCredit: () => {},
     resetAccount: () => {},
     resetChat: () => {},
-    setThinkingEnabled: () => {},
+    setReasoningLevel: () => {},
     setWebSearchEnabled: () => {},
-    toggleThinking: () => {},
     setCreditLogs: () => {},
   }));
 
@@ -205,9 +204,11 @@ describe('useAuthSession', () => {
       const convResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          conversations: [
-            { id: 'conv-1', title: 'Test Conversation', model: 'gpt-4' }
-          ]
+          data: {
+            conversations: [
+              { id: 'conv-1', title: 'Test Conversation', model: 'gpt-4' }
+            ]
+          }
         }),
       };
 
@@ -339,7 +340,9 @@ describe('useAuthSession', () => {
       const convResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          conversations: []
+          data: {
+            conversations: []
+          }
         }),
       };
 
@@ -383,7 +386,9 @@ describe('useAuthSession', () => {
       const convResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          conversations: []
+          data: {
+            conversations: []
+          }
         }),
       };
 
@@ -487,7 +492,7 @@ describe('useAuthSession', () => {
 
       // Resolve the hanging promise
       await act(async () => {
-        resolveConv({ conversations: [] });
+        resolveConv({ data: { conversations: [] } });
       });
 
       await waitFor(() => {
@@ -546,7 +551,9 @@ describe('useAuthSession', () => {
       const convResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          conversations: []
+          data: {
+            conversations: []
+          }
         }),
       };
 

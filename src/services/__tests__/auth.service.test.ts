@@ -12,6 +12,9 @@ jest.mock('jsonwebtoken');
 jest.mock('@/config', () => ({
   JWT_SECRET: 'default-secret-key-change-me'
 }));
+jest.mock('@/services/email.service', () => ({
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined)
+}));
 
 const mockedUserRepository = UserRepository as jest.Mocked<typeof UserRepository>;
 const mockedTransaction = transaction as jest.MockedFunction<typeof transaction>;
@@ -49,6 +52,7 @@ describe('AuthService', () => {
         api_key: null,
         created_at: new Date(),
         updated_at: new Date(),
+        isEmailVerified: 0,
       };
 
       mockedUserRepository.findByEmail.mockResolvedValue(null);
@@ -60,14 +64,18 @@ describe('AuthService', () => {
       expect(mockedBcryptHash).toHaveBeenCalledWith(userData.password, 10);
       expect(mockedTransaction).toHaveBeenCalledWith(expect.any(Function));
       expect(result).toEqual({
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        role: newUser.role,
-        avatar: newUser.avatar,
-        credit: 0,
-        totalSpent: 0,
-        createdAt: newUser.created_at,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+          avatar: newUser.avatar,
+          credit: 0,
+          totalSpent: 0,
+          createdAt: newUser.created_at,
+          isEmailVerified: 0,
+        },
+        needsVerification: true,
       });
     });
 
@@ -89,7 +97,7 @@ describe('AuthService', () => {
       });
 
       await expect(AuthService.register(userData)).rejects.toThrow(
-        'User with this email already exists'
+        'Email sudah terdaftar. Silakan gunakan email lain atau masuk ke akun Anda'
       );
     });
 
@@ -125,6 +133,7 @@ describe('AuthService', () => {
         credit: 100,
         total_spent: 50,
         created_at: new Date(),
+        isEmailVerified: 1,
       };
 
       mockedUserRepository.findByEmail.mockResolvedValue(user);
@@ -151,6 +160,7 @@ describe('AuthService', () => {
           credit: 100,
           totalSpent: 50,
           createdAt: user.created_at,
+          isEmailVerified: 1,
         },
       });
     });
@@ -164,7 +174,7 @@ describe('AuthService', () => {
       mockedUserRepository.findByEmail.mockResolvedValue(null);
 
       await expect(AuthService.login(credentials)).rejects.toThrow(
-        'Invalid email or password'
+        'Email atau password tidak valid'
       );
     });
 
@@ -183,13 +193,14 @@ describe('AuthService', () => {
         credit: 100,
         total_spent: 50,
         created_at: new Date(),
+        isEmailVerified: 1,
       };
 
       mockedUserRepository.findByEmail.mockResolvedValue(user);
       mockedBcryptCompare.mockResolvedValue(false);
 
       await expect(AuthService.login(credentials)).rejects.toThrow(
-        'Invalid email or password'
+        'Email atau password tidak valid'
       );
     });
 
@@ -208,12 +219,39 @@ describe('AuthService', () => {
         credit: 100,
         total_spent: 50,
         created_at: new Date(),
+        isEmailVerified: 1,
       };
 
       mockedUserRepository.findByEmail.mockResolvedValue(user);
 
       await expect(AuthService.login(credentials)).rejects.toThrow(
-        'Invalid email or password'
+        'Email atau password tidak valid'
+      );
+    });
+
+    it('should throw error if email is not verified', async () => {
+      const credentials = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
+      const user = {
+        id: 'user-123',
+        email: credentials.email,
+        name: 'Test User',
+        role: 'user',
+        password: 'hashed-password',
+        credit: 100,
+        total_spent: 50,
+        created_at: new Date(),
+        isEmailVerified: 0,
+      };
+
+      mockedUserRepository.findByEmail.mockResolvedValue(user);
+      mockedBcryptCompare.mockResolvedValue(true);
+
+      await expect(AuthService.login(credentials)).rejects.toThrow(
+        'Email belum diverifikasi'
       );
     });
   });
@@ -231,6 +269,7 @@ describe('AuthService', () => {
         credit: 100,
         total_spent: 50,
         created_at: new Date(),
+        isEmailVerified: 1,
       };
 
       mockedJwtVerify.mockReturnValue(decoded);
@@ -249,6 +288,7 @@ describe('AuthService', () => {
         credit: 100,
         totalSpent: 50,
         createdAt: user.created_at,
+        isEmailVerified: 1,
       });
     });
 
@@ -287,6 +327,7 @@ describe('AuthService', () => {
         credit: 123.456,
         total_spent: 789.012,
         created_at: '2024-01-01T00:00:00.000Z',
+        isEmailVerified: 1,
       };
 
       const result = AuthService.mapUserToDto(user);
@@ -300,6 +341,7 @@ describe('AuthService', () => {
         credit: 123.456,
         totalSpent: 789.012,
         createdAt: '2024-01-01T00:00:00.000Z',
+        isEmailVerified: 1,
       });
     });
   });

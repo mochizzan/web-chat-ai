@@ -61,7 +61,7 @@ export const AdminService = {
       users: result.users.map((u: any) => ({
         ...u,
         credit: Number(u.credit),
-        total_spent: Number(u.total_spent),
+        totalSpent: Number(u.total_spent),
       }))
     };
   },

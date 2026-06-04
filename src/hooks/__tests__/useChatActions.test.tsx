@@ -68,7 +68,7 @@ describe('useChatActions', () => {
     creditLogs: [],
     user: null,
     isLoggedIn: false,
-    thinkingEnabled: true,
+    reasoningLevel: 'medium',
     webSearchEnabled: false,
     activeConversationId: null,
     activeCategory: 'assistant',
@@ -116,9 +116,8 @@ describe('useChatActions', () => {
     addUserCredit: jest.fn(),
     resetAccount: jest.fn(),
     resetChat: jest.fn(),
-    setThinkingEnabled: jest.fn(),
+    setReasoningLevel: jest.fn(),
     setWebSearchEnabled: jest.fn(),
-    toggleThinking: jest.fn(),
   };
 
   const baseMockState = { ...mockUIState, ...mockChatDataStore };
@@ -433,15 +432,17 @@ describe('useChatActions', () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          credit: 900,
-          totalSpent: 100,
-          creditLog: {
-            id: 'log-1',
-            user_id: 'user-1',
-            type: 'deduction',
-            amount: -100,
-            balance: 900,
-            description: 'AI usage'
+          data: {
+            credit: 900,
+            totalSpent: 100,
+            creditLog: {
+              id: 'log-1',
+              user_id: 'user-1',
+              type: 'deduction',
+              amount: -100,
+              balance: 900,
+              description: 'AI usage'
+            }
           }
         })
       };
@@ -500,7 +501,7 @@ describe('useChatActions', () => {
       expect(mockChatDataStore.setCredit).not.toHaveBeenCalled();
       expect(mockToast).toHaveBeenCalledWith({
         title: 'Gagal Mengurangi Kredit',
-        description: 'Insufficient balance',
+        description: 'Gagal mengurangi kredit',
         variant: 'destructive',
       });
     });
@@ -528,14 +529,16 @@ describe('useChatActions', () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockResolvedValue({
-          credit: 1100,
-          creditLog: {
-            id: 'log-2',
-            user_id: 'user-1',
-            type: 'topup',
-            amount: 100,
-            balance: 1100,
-            description: 'Top up'
+          data: {
+            credit: 1100,
+            creditLog: {
+              id: 'log-2',
+              user_id: 'user-1',
+              type: 'topup',
+              amount: 100,
+              balance: 1100,
+              description: 'Top up'
+            }
           }
         })
       };
@@ -601,7 +604,7 @@ describe('useChatActions', () => {
       expect(mockChatDataStore.setCredit).not.toHaveBeenCalled();
       expect(mockToast).toHaveBeenCalledWith({
         title: 'Gagal Top Up',
-        description: 'Invalid amount',
+        description: 'Gagal menambahkan kredit',
         variant: 'destructive',
       });
     });

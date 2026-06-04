@@ -2,8 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function NotFound() {
+  usePageTitle('Page Not Found');
+
   return (
     <div style={{ 
       display: 'flex', 

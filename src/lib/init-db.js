@@ -37,6 +37,15 @@ async function main() {
     console.log('Schema created successfully.');
   }
 
+  // Run migration-api-keys.sql
+  const migrationApiKeysPath = path.join(__dirname, 'migration-api-keys.sql');
+  if (fs.existsSync(migrationApiKeysPath)) {
+    const migrationApiKeys = fs.readFileSync(migrationApiKeysPath, 'utf-8');
+    console.log('Running migration-api-keys.sql...');
+    await connection.query(migrationApiKeys);
+    console.log('API keys migration created successfully.');
+  }
+
   // Hash password untuk admin
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const hashedPassword = await bcrypt.hash(adminPassword, 12);

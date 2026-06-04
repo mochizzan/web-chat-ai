@@ -289,6 +289,202 @@
   background: oklch(0.22 0.006 155);
 }
 
+/* Markdown table styles — Professional Excel-like styling with scroll */
+.markdown-table-container {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid oklch(0.88 0.003 155);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.03), 0 2px 4px -2px rgb(0 0 0 / 0.03);
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.80 0.005 155) transparent;
+  background-color: var(--background, #fff);
+  max-width: 100%;
+}
+
+.dark .markdown-table-container {
+  border-color: oklch(0.28 0.005 155);
+  scrollbar-color: oklch(0.35 0.005 155) transparent;
+  background-color: oklch(0.15 0.004 155);
+}
+
+/* Table styling */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: max-content; /* Key fix: forces table columns to expand to their full contents and scroll horizontally rather than squishing */
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  table-layout: auto;
+  empty-cells: show;
+}
+
+.markdown-content thead {
+  background: oklch(0.95 0.005 155);
+  border-bottom: 2px solid oklch(0.82 0.005 155);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dark .markdown-content thead {
+  background: oklch(0.22 0.006 155);
+  border-bottom-color: oklch(0.35 0.005 155);
+}
+
+.markdown-content th {
+  background: oklch(0.94 0.005 155);
+  color: oklch(0.20 0.006 155);
+  font-weight: 600;
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  border: 1px solid oklch(0.85 0.005 155);
+  white-space: nowrap;
+}
+
+.dark .markdown-content th {
+  background: oklch(0.25 0.006 155);
+  color: oklch(0.88 0.004 155);
+  border-color: oklch(0.32 0.005 155);
+}
+
+.markdown-content td {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid oklch(0.88 0.003 155);
+  color: oklch(0.30 0.005 155);
+  vertical-align: middle;
+  transition: background-color 0.15s ease;
+  min-width: 100px; /* Risk Mitigation: guarantees compact but legible content columns */
+  max-width: 320px; /* Risk Mitigation: wraps extremely long cells without blowing up the layout */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.dark .markdown-content td {
+  border-color: oklch(0.28 0.005 155);
+  color: oklch(0.78 0.005 155);
+}
+
+.markdown-content tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.markdown-content tbody tr:nth-child(even) {
+  background: oklch(0.98 0.002 155);
+}
+
+.dark .markdown-content tbody tr:nth-child(even) {
+  background: oklch(0.18 0.004 155);
+}
+
+.markdown-content tbody tr:hover {
+  background: oklch(0.93 0.005 155) !important;
+}
+
+.dark .markdown-content tbody tr:hover {
+  background: oklch(0.24 0.005 155) !important;
+}
+
+/* Custom Scrollbar for Excel Table Container */
+.markdown-table-container::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.markdown-table-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+.markdown-table-container::-webkit-scrollbar-thumb {
+  background: oklch(0.80 0.005 155);
+  border-radius: 9999px;
+}
+
+.markdown-table-container::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.70 0.005 155);
+}
+
+.dark .markdown-table-container::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.005 155);
+}
+
+.dark .markdown-table-container::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.005 155);
+}
+
+/* Excel-exclusive Headers & Indices styling */
+.markdown-table-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.markdown-table-container th.excel-corner-header {
+  background: oklch(0.92 0.005 155) !important;
+  border: 1px solid oklch(0.85 0.005 155) !important;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  height: 24px;
+  padding: 0 !important;
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 30;
+}
+
+.dark .markdown-table-container th.excel-corner-header {
+  background: oklch(0.24 0.006 155) !important;
+  border-color: oklch(0.32 0.005 155) !important;
+}
+
+.markdown-table-container th.excel-col-header {
+  background: oklch(0.94 0.005 155) !important;
+  color: oklch(0.40 0.01 155) !important;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem !important;
+  border: 1px solid oklch(0.85 0.005 155) !important;
+  text-align: center !important;
+  text-transform: uppercase;
+  height: 24px;
+  min-width: 100px;
+  max-width: 320px;
+}
+
+.dark .markdown-table-container th.excel-col-header {
+  background: oklch(0.24 0.006 155) !important;
+  color: oklch(0.65 0.005 155) !important;
+  border-color: oklch(0.32 0.005 155) !important;
+}
+
+.markdown-table-container th.excel-row-header,
+.markdown-table-container td.excel-row-header {
+  background: oklch(0.94 0.005 155) !important;
+  color: oklch(0.40 0.01 155) !important;
+  font-weight: 700;
+  font-size: 0.70rem;
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  padding: 0.35rem 0.2rem !important;
+  border: 1px solid oklch(0.85 0.005 155) !important;
+  text-align: center !important;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-clip: padding-box;
+}
+
+.dark .markdown-table-container th.excel-row-header,
+.dark .markdown-table-container td.excel-row-header {
+  background: oklch(0.24 0.006 155) !important;
+  color: oklch(0.65 0.005 155) !important;
+  border-color: oklch(0.32 0.005 155) !important;
+}
+
 /* Typing indicator */
 @keyframes typing-dot {
   0%, 60%, 100% {

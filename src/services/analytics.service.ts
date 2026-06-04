@@ -48,6 +48,15 @@ export const AnalyticsService = {
       topUsersResult,
       modelCountsResult,
       newUsersOverTimeResult,
+      // BYOK queries
+      totalApiKeysResult,
+      activeApiKeysResult,
+      apiUsageSummaryResult,
+      apiRequestsPerModelResult,
+      apiUsageOverTimeResult,
+      topApiKeysResult,
+      topApiUsersResult,
+      combinedProfitResult,
     ] = await Promise.all([
       AnalyticsRepository.getTotalUsers(),
       AnalyticsRepository.getNewUsersStats(),
@@ -62,6 +71,15 @@ export const AnalyticsService = {
       AnalyticsRepository.getTopUsers(interval),
       AnalyticsRepository.getModelCounts(),
       AnalyticsRepository.getNewUsersOverTime(interval, timeGrouping),
+      // BYOK
+      AnalyticsRepository.getTotalApiKeys(),
+      AnalyticsRepository.getActiveApiKeysCount(),
+      AnalyticsRepository.getApiUsageSummary(interval),
+      AnalyticsRepository.getApiRequestsPerModel(interval),
+      AnalyticsRepository.getApiUsageOverTime(interval, timeGrouping),
+      AnalyticsRepository.getTopApiKeys(interval),
+      AnalyticsRepository.getTopApiUsers(interval),
+      AnalyticsRepository.getCombinedProfitStats(),
     ]);
 
     const totalUsers = totalUsersResult?.total || 0;
@@ -70,7 +88,7 @@ export const AnalyticsService = {
     const totalConversations = convMsgResult?.total_conversations || 0;
     const totalMessages = convMsgResult?.total_messages || 0;
     const totalRevenue = Number(revenueResult?.total || 0);
-    const profit = Number(profitResult?.profit || 0);
+    const profit = Number(combinedProfitResult?.profit ?? profitResult?.profit ?? 0);
     const activeUsers30d = activeUsersResult?.active || 0;
     const totalRequests = usageSummaryResult?.total_requests || 0;
     const totalTokens = Number(usageSummaryResult?.total_tokens || 0);
@@ -78,6 +96,13 @@ export const AnalyticsService = {
     const avgTokensPerRequest = totalRequests > 0 ? Math.round(totalTokens / totalRequests) : 0;
     const totalModels = modelCountsResult?.total_models || 0;
     const activeModels = modelCountsResult?.active_models || 0;
+
+    // BYOK summary
+    const byokTotalKeys = totalApiKeysResult?.total || 0;
+    const byokActiveKeys = activeApiKeysResult?.active || 0;
+    const byokTotalRequests = apiUsageSummaryResult?.total_requests || 0;
+    const byokTotalTokens = Number(apiUsageSummaryResult?.total_tokens || 0);
+    const byokTotalCost = Number(apiUsageSummaryResult?.total_cost || 0);
 
     return {
       summary: {
@@ -95,6 +120,12 @@ export const AnalyticsService = {
         avgTokensPerRequest,
         totalModels,
         activeModels,
+        // BYOK summary fields
+        byokTotalKeys,
+        byokActiveKeys,
+        byokTotalRequests,
+        byokTotalTokens,
+        byokTotalCost,
       },
       requestsPerModel: (requestsPerModelResult || []).map((r: any) => ({
         name: r.name,
@@ -118,6 +149,29 @@ export const AnalyticsService = {
         totalSpent: Number(r.total_spent),
         credit: Number(r.credit),
         requestCount: r.request_count,
+      })),
+      // BYOK data arrays
+      byokRequestsPerModel: (apiRequestsPerModelResult || []).map((r: any) => ({
+        name: r.name,
+        requests: r.requests,
+      })),
+      byokUsageOverTime: (apiUsageOverTimeResult || []).map((r: any) => ({
+        time: String(r.time),
+        tokens: Number(r.tokens),
+      })),
+      topApiKeys: (topApiKeysResult || []).map((r: any) => ({
+        name: r.name,
+        key_prefix: r.key_prefix,
+        requestCount: r.request_count,
+        totalTokens: Number(r.total_tokens),
+        totalCost: Number(r.total_cost),
+      })),
+      topApiUsers: (topApiUsersResult || []).map((r: any) => ({
+        name: r.name,
+        email: r.email,
+        requestCount: r.request_count,
+        totalTokens: Number(r.total_tokens),
+        totalCost: Number(r.total_cost),
       })),
     };
   },

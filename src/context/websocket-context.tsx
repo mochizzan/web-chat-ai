@@ -139,8 +139,12 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         store.getState().addModel(data.model as unknown as Model);
         break;
       case 'credit:update':
-        if (data.userId === state.user?.id) {
-          store.getState().setCredit(data.newBalance);
+        try {
+          if (data.userId === state.user?.id && data.newBalance !== undefined) {
+            store.getState().setCredit(Number(data.newBalance));
+          }
+        } catch (err) {
+          console.error('[WS] Error handling credit:update:', err, data);
         }
         break;
       case 'user:update':

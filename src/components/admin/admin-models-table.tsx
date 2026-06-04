@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Cpu, Search, Filter, RefreshCw, Trash2, ArrowLeft, Edit } from 'lucide-react';
+import { Cpu, Search, Filter, RefreshCw, Trash2, ArrowLeft, Edit, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +53,9 @@ export function AdminModelsTable({
         const matchesSearch =
           model.name.toLowerCase().includes(q) ||
           model.provider.toLowerCase().includes(q) ||
-          model.description.toLowerCase().includes(q);
+          (model.description ?? '').toLowerCase().includes(q) ||
+          (model.id ?? '').toLowerCase().includes(q) ||
+          (model.publicId ?? '').toLowerCase().includes(q);
         if (!matchesSearch) return false;
       }
       switch (activeFilter) {
@@ -87,11 +89,8 @@ export function AdminModelsTable({
   }, [filteredModels, currentPage]);
 
   useEffect(() => {
-    if (currentPage !== 1) {
-      const timer = setTimeout(() => setCurrentPage(1), 0);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, activeFilter, providerFilter, currentPage]);
+    setCurrentPage(1);
+  }, [searchQuery, activeFilter, providerFilter]);
 
   const filterButtons: { id: ModelFilter; label: string }[] = [
     { id: 'all', label: 'Semua' },
@@ -179,6 +178,7 @@ export function AdminModelsTable({
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold">Model</TableHead>
                 <TableHead className="text-xs font-semibold">Provider</TableHead>
+                <TableHead className="text-xs font-semibold">Public ID</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Status</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Kecepatan</TableHead>
                 <TableHead className="text-xs font-semibold text-center">Diskon</TableHead>
@@ -190,7 +190,7 @@ export function AdminModelsTable({
             <TableBody>
               {filteredModels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     <p className="text-sm text-muted-foreground">Tidak ada model yang cocok dengan filter</p>
                   </TableCell>
                 </TableRow>
@@ -202,14 +202,29 @@ export function AdminModelsTable({
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Cpu className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                          <div>
+                          <div className="flex flex-col space-y-1">
                             <p className="text-sm font-semibold text-foreground">{model.name}</p>
+                            <p className="text-[9px] text-muted-foreground/60 truncate" title={model.id}>
+                              {model.id ?? '-'}
+                            </p>
                             <p className="text-[11px] text-muted-foreground/60 truncate max-w-[200px]">{model.description}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="text-[10px]">{model.provider}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {model.publicId ? (
+                          <div className="flex items-center gap-1.5">
+                            <Globe className="h-3 w-3 text-amber-500 shrink-0" />
+                            <code className="text-[10px] font-mono text-amber-600 dark:text-amber-400 bg-amber-500/5 px-1.5 py-0.5 rounded truncate max-w-[160px] block">
+                              {model.publicId}
+                            </code>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/40 italic">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         {model.status === 'active' && (

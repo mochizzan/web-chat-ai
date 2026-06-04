@@ -3,6 +3,7 @@ import { verifyAuth } from '@/lib/auth';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { BillingService } from '@/services/billing.service';
 import { CreditLog } from '@/types';
+import { UserNotFoundError } from '@/lib/errors';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,10 +35,9 @@ export async function GET(request: NextRequest) {
       })),
     }, 200);
   } catch (error: unknown) {
-    const err = error as Error;
     console.error('Account API error:', error);
-    if (err.message === 'User not found') {
-      return apiError('User not found', 404);
+    if (error instanceof UserNotFoundError) {
+      return apiError('User account no longer exists. Please login again.', 401);
     }
     return apiError('Failed to fetch account info', 500);
   }

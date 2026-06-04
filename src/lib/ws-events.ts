@@ -2,6 +2,7 @@ export type ModelStatus = 'active' | 'maintenance' | 'disabled';
 
 export interface ModelWS {
   id: string;
+  publicId?: string;
   status: ModelStatus;
   inputPrice: number;
   outputPrice: number;

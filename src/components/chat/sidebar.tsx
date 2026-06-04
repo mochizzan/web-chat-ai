@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { useTheme } from 'next-themes';
 import { useMounted } from '@/hooks/use-mounted';
@@ -26,6 +27,8 @@ import {
   Clock,
   PanelLeftClose,
   Search,
+  MoreVertical,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,6 +41,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useChatStore, useChatDataStore, type ConversationPreview } from '@/lib/store';
 import { MarqueeText } from '@/components/ui/marquee-text';
 
@@ -247,9 +257,23 @@ export function Sidebar({
   // NOT by toggle-only categories (coding/research/assistant/natural)
   const SIDEBAR_MODES = ['chat', 'agent', 'imagen'];
   const sidebarCategory = SIDEBAR_MODES.includes(activeCategory) ? activeCategory : 'chat';
-  const filteredConversations = sidebarCategory === 'chat'
+  const filteredConversations = (sidebarCategory === 'chat'
     ? conversations
-    : conversations.filter((c) => c.category === sidebarCategory);
+    : conversations.filter((c) => c.category === sidebarCategory)
+  ).filter((c) => {
+    // Hide anonymous conversations that have no data in localStorage
+    if (c.id.startsWith('conv_anon_')) {
+      const stored = localStorage.getItem(`anon_conversation_${c.id}`);
+      if (!stored) return false;
+      try {
+        const messages = JSON.parse(stored);
+        return Array.isArray(messages) && messages.length > 0;
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const pinnedConversations = filteredConversations.filter((c) => c.pinned);
   const sidebarRegularConvosAll = filteredConversations.filter((c) => !c.pinned);
@@ -354,7 +378,7 @@ export function Sidebar({
       <div ref={headerRef} className="flex items-center justify-between px-3 pt-3 pb-2 shrink-0">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/6">
-            <Bot className="h-4 w-4 text-primary/70" />
+            <Image src="/logo.png" alt="MI-Labs Logo" width={16} height={16} className="object-contain" />
           </div>
           <span className="text-sm font-bold tracking-tight text-foreground">
             MI-Labs
@@ -494,29 +518,6 @@ export function Sidebar({
             );
           })}
 
-          {/* Admin: Control Panel button */}
-          {isAdmin && (
-            <button
-              onClick={() => router.push('/admin')}
-              className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-all hover:bg-accent/50 text-foreground"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-md shrink-0 bg-muted/40">
-                <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[13px] font-semibold text-foreground">Control Panel</span>
-                  <span className="inline-flex items-center gap-0.5 rounded bg-muted/60 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <Shield className="h-2 w-2" />
-                    Admin
-                  </span>
-                </div>
-                <p className="text-[10px] leading-tight mt-0.5 text-muted-foreground">
-                  Kelola model & pengguna
-                </p>
-              </div>
-            </button>
-          )}
         </div>
       </div>
 
@@ -607,14 +608,34 @@ export function Sidebar({
               </div>
               <p className="text-[10px] text-muted-foreground/60 truncate">{user.email}</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 text-muted-foreground"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" side="top" className="w-44">
+                {user.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => router.push('/admin')}>
+                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    Control Panel
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                  <LayoutDashboard className="h-3.5 w-3.5 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                  <LogOut className="h-3.5 w-3.5 mr-2" />
+                  Keluar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ) : (
           <button
