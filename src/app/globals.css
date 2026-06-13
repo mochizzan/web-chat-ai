@@ -506,3 +506,28 @@
 .typing-dot:nth-child(3) {
   animation-delay: 0.4s;
 }
+
+/* ─── Print Styles for Invoice ─────────── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .invoice-preview,
+  .invoice-preview * {
+    visibility: visible;
+  }
+  .invoice-preview {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .print\\:hidden {
+    display: none !important;
+  }
+}

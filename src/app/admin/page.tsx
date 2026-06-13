@@ -74,12 +74,12 @@ export default function AdminPage() {
     await toggleFreeStatus(modelId, model.free);
   };
 
-  const handleSetCredit = async (userId: string, amount: number) => {
-    return await setCredit(userId, amount);
+  const handleSetCredit = async (userId: string, amount: number, description?: string) => {
+    return await setCredit(userId, amount, description);
   };
 
-  const handleAddCredit = async (userId: string, amount: number) => {
-    return await addCredit(userId, amount);
+  const handleAddCredit = async (userId: string, amount: number, description?: string) => {
+    return await addCredit(userId, amount, description);
   };
 
   if (!isLoggedIn || user?.role !== 'admin') {

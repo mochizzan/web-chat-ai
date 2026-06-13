@@ -22,4 +22,23 @@ export type WSEvent =
   | { type: 'response:initial_sync'; models?: ModelWS[]; user?: { id: string; role: string }; credit?: number }
   | { type: 'models:changed' }
   | { type: 'ping' }
-  | { type: 'pong' };
+  | { type: 'pong' }
+  | {
+      type: 'log:new';
+      log: {
+        id: string;
+        userId: string;
+        userName: string;
+        userEmail: string;
+        logType: 'chat' | 'byok';
+        model: string;
+        provider: string;
+        inputTokens: number;
+        outputTokens: number;
+        cost: number;
+        creditBefore?: number;
+        creditAfter?: number;
+        status: 'success' | 'error';
+        createdAt: string;
+      };
+    };

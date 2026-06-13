@@ -68,8 +68,8 @@ export const BillingService = {
    * Processes a credit top-up for a user.
    * Updates balance -> Logs transaction -> Broadcasts via WebSocket.
    */
-  async processTopup(userId: string, amount: number): Promise<void> {
-    console.log(`[${new Date().toISOString()}] [BillingService] processTopup: Starting top-up process`, { userId, amount });
+  async processTopup(userId: string, amount: number, description?: string): Promise<void> {
+    console.log(`[${new Date().toISOString()}] [BillingService] processTopup: Starting top-up process`, { userId, amount, description });
     if (amount <= 0) {
       console.log(`[${new Date().toISOString()}] [BillingService] processTopup: Invalid top-up amount`, { amount });
       throw new Error('Top-up amount must be positive');
@@ -99,7 +99,7 @@ export const BillingService = {
         type: 'topup',
         amount: amount,
         balance: newBalance,
-        description: `Top-up of ${amount} credits`,
+        description: description || `Top-up of ${amount} credits`,
         created_at: new Date(),
       };
   

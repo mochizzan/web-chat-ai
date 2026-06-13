@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Wallet } from 'lucide-react';
@@ -25,8 +26,8 @@ interface AdminCreditModalProps {
   user: User | null;
   isOpen: boolean;
   onClose: () => void;
-  onSetCredit: (userId: string, amount: number) => Promise<{ success: boolean }>;
-  onAddCredit: (userId: string, amount: number) => Promise<{ success: boolean }>;
+  onSetCredit: (userId: string, amount: number, description?: string) => Promise<{ success: boolean }>;
+  onAddCredit: (userId: string, amount: number, description?: string) => Promise<{ success: boolean }>;
 }
 
 export function AdminCreditModal({
@@ -37,6 +38,7 @@ export function AdminCreditModal({
   onAddCredit,
 }: AdminCreditModalProps) {
   const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
   const [activeTab, setActiveTab] = useState('topup');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,16 +52,17 @@ export function AdminCreditModal({
     try {
       let result;
       if (activeTab === 'set') {
-        result = await onSetCredit(user.id, numAmount);
+        result = await onSetCredit(user.id, numAmount, description);
       } else if (activeTab === 'topup') {
-        result = await onAddCredit(user.id, numAmount);
+        result = await onAddCredit(user.id, numAmount, description);
       } else if (activeTab === 'reduce') {
-        result = await onAddCredit(user.id, -numAmount);
+        result = await onAddCredit(user.id, -numAmount, description);
       }
 
       if (result?.success) {
         onClose();
         setAmount('');
+        setDescription('');
       }
     } catch (error) {
       console.error('Error updating credit:', error);
@@ -141,6 +144,22 @@ export function AdminCreditModal({
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Description field */}
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="description">Keterangan (opsional)</Label>
+            <Textarea
+              id="description"
+              placeholder="Masukkan keterangan untuk transaksi ini..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="resize-none"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Keterangan akan tampil di invoice pengguna.
+            </p>
+          </div>
         </div>
 
         <DialogFooter>

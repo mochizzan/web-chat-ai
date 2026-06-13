@@ -164,6 +164,135 @@ export const BillingRepository = {
     }
   },
 
+  async getUnifiedAdminLogs(page: number, limit: number, search: string, period: string, type: string) {
+    console.log(`[${new Date().toISOString()}] [BillingRepository] getUnifiedAdminLogs: Querying unified logs`, {
+      page, limit, search, period, type
+    });
+    const startTime = Date.now();
+    try {
+      const offset = (page - 1) * limit;
+      const conditions: string[] = [];
+      const params: any[] = [];
+
+      // --- Period condition (same as getAdminUsageLogs) ---
+      const getPeriodCondition = (p: string): string => {
+        switch (p) {
+          case 'today': return 'created_at >= CURDATE()';
+          case '24h': return 'created_at >= NOW() - INTERVAL 1 DAY';
+          case '7d': return 'created_at >= NOW() - INTERVAL 7 DAY';
+          case '30d': return 'created_at >= NOW() - INTERVAL 30 DAY';
+          case '1y': return 'created_at >= NOW() - INTERVAL 1 YEAR';
+          default: return '';
+        }
+      };
+
+      const periodCond = getPeriodCondition(period);
+      if (periodCond) conditions.push(periodCond);
+
+      // --- Type filter ---
+      let typeFilter = '';
+      if (type === 'chat') typeFilter = ' AND log_type = \'chat\'';
+      else if (type === 'byok') typeFilter = ' AND log_type = \'byok\'';
+
+      // --- Search ---
+      if (search) {
+        conditions.push('(model LIKE ? OR user_name LIKE ? OR user_email LIKE ? OR provider LIKE ?)');
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      }
+
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+
+      // --- Count total ---
+      const countResult = await querySimple<any[]>(
+        `SELECT COUNT(*) as total FROM (
+          SELECT
+            ul.id, u.name as user_name, u.email as user_email,
+            'chat' as log_type,
+            ul.model_name as model, ul.provider,
+            ul.input_tokens, ul.output_tokens,
+            ul.total_cost as cost,
+            NULL as credit_before, NULL as credit_after,
+            'success' as status,
+            ul.created_at
+          FROM usage_logs ul
+          JOIN users u ON u.id = ul.user_id
+
+          UNION ALL
+
+          SELECT
+            aul.id, u.name as user_name, u.email as user_email,
+            'byok' as log_type,
+            aul.model, COALESCE(ak.name, aul.api_key_id) as provider,
+            aul.prompt_tokens as input_tokens, aul.completion_tokens as output_tokens,
+            aul.cost,
+            aul.credit_before, aul.credit_after,
+            aul.status,
+            aul.created_at
+          FROM api_usage_logs aul
+          JOIN users u ON u.id = aul.user_id
+          LEFT JOIN api_keys ak ON ak.id = aul.api_key_id
+        ) combined ${whereClause}`,
+        params
+      );
+      const total = countResult?.[0]?.total || 0;
+
+      // --- Fetch logs with UNION ---
+      const logs = await querySimple<any[]>(
+        `SELECT * FROM (
+          SELECT
+            ul.id, u.name as user_name, u.email as user_email,
+            'chat' as log_type,
+            ul.model_name as model, ul.provider,
+            ul.input_tokens, ul.output_tokens,
+            ul.total_cost as cost,
+            NULL as credit_before, NULL as credit_after,
+            'success' as status,
+            ul.created_at
+          FROM usage_logs ul
+          JOIN users u ON u.id = ul.user_id
+
+          UNION ALL
+
+          SELECT
+            aul.id, u.name as user_name, u.email as user_email,
+            'byok' as log_type,
+            aul.model, COALESCE(ak.name, aul.api_key_id) as provider,
+            aul.prompt_tokens as input_tokens, aul.completion_tokens as output_tokens,
+            aul.cost,
+            aul.credit_before, aul.credit_after,
+            aul.status,
+            aul.created_at
+          FROM api_usage_logs aul
+          JOIN users u ON u.id = aul.user_id
+          LEFT JOIN api_keys ak ON ak.id = aul.api_key_id
+        ) combined
+        ${whereClause}
+        ${typeFilter}
+        ORDER BY created_at DESC
+        LIMIT ? OFFSET ?`,
+        [...params, limit, offset]
+      );
+
+      console.log(`[${new Date().toISOString()}] [BillingRepository] getUnifiedAdminLogs: Successfully queried`, {
+        count: logs?.length || 0,
+        total,
+        timeTaken: `${Date.now() - startTime}ms`
+      });
+      return {
+        logs: logs || [],
+        total,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] [BillingRepository] getUnifiedAdminLogs: Error`, {
+        page, limit, search, period, type,
+        error: String(error),
+        timeTaken: `${Date.now() - startTime}ms`
+      });
+      throw error;
+    }
+  },
+
   async getCreditLogs(userId: string, limit: number, conn?: PoolConnection): Promise<CreditLog[]> {
     console.log(`[${new Date().toISOString()}] [BillingRepository] getCreditLogs: Querying credit logs`, {
       userId,

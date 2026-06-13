@@ -35,8 +35,8 @@ interface AdminUserTableProps {
   users: User[];
   isLoading: boolean;
   currentUser: { id: string } | null;
-  onSetCredit: (id: string, amount: number) => Promise<{ success: boolean }>;
-  onAddCredit: (id: string, amount: number) => Promise<{ success: boolean }>;
+  onSetCredit: (id: string, amount: number, description?: string) => Promise<{ success: boolean }>;
+  onAddCredit: (id: string, amount: number, description?: string) => Promise<{ success: boolean }>;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   currentPage: number;

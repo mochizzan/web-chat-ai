@@ -9,6 +9,7 @@ export type SourceFilter = 'all' | UsageLogSource;
 export interface UseAccountDataResult {
   leftFilteredLogs: UsageLogEntry[];
   rightFilteredCreditLogs: CreditLogEntry[];
+  rightFilteredLogs: UsageLogEntry[];
   rightMergedTimeline: TimelineEntry[];
   modelBreakdown: Array<[string, ModelData]>;
   tokenChartData: TokenChartData[];
@@ -44,7 +45,7 @@ export function useAccountData(
 
   // Filtered credit logs for RIGHT panel — topup & bonus (bukan duplikat usage AI)
   const rightFilteredCreditLogs = useMemo(
-    () => filterCreditLogsByPeriod(creditLogs, rightFilter).filter((l) => l.type === 'topup' || l.type === 'bonus'),
+    () => filterCreditLogsByPeriod(creditLogs, rightFilter).filter((l) => l.type !== 'usage'),
     [creditLogs, rightFilter]
   );
 

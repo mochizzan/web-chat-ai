@@ -103,15 +103,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId, amount } = body;
+    const { userId, amount, description } = body;
 
     if (!userId || amount === undefined) {
       console.log(`[${new Date().toISOString()}] [AdminUsersAPI] POST: Missing required fields`, { userId: userId || 'undefined', amount, timeTaken: `${Date.now() - startTime}ms` });
       return apiError('User ID and amount are required', 400);
     }
 
-    console.log(`[${new Date().toISOString()}] [AdminUsersAPI] POST: Calling AdminService.adjustUserCredit`, { userId, amount, reason: 'Admin adjustment' });
-    await AdminService.adjustUserCredit(userId, Number(amount), 'Admin adjustment');
+    const reason = description || 'Admin adjustment';
+    console.log(`[${new Date().toISOString()}] [AdminUsersAPI] POST: Calling AdminService.adjustUserCredit`, { userId, amount, reason });
+    await AdminService.adjustUserCredit(userId, Number(amount), reason);
     console.log(`[${new Date().toISOString()}] [AdminUsersAPI] POST: Successfully adjusted user credit`, { userId, amount, timeTaken: `${Date.now() - startTime}ms` });
 
     return apiSuccess({ success: true });

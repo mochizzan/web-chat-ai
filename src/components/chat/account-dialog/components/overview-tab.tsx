@@ -72,6 +72,7 @@ interface OverviewTabProps {
   onExpandedLogChange: (id: string | null) => void;
   expandedLog: string | null;
   mounted: boolean;
+  onPrintInvoice?: (log: CreditLogEntry) => void;
 }
 
 const SOURCE_TABS: { value: SourceFilter; label: string; icon: string }[] = [
@@ -103,6 +104,7 @@ export function OverviewTab({
   onExpandedLogChange,
   expandedLog,
   mounted,
+  onPrintInvoice,
 }: OverviewTabProps) {
   return (
     <div className="flex-1 overflow-hidden flex min-h-0">
@@ -500,13 +502,13 @@ export function OverviewTab({
             <div className="space-y-2.5">
               {rightMergedTimeline.map((entry) =>
                 entry.kind === 'usage'
-                  ? <LogItem 
-                      key={entry.data.id} 
-                      log={entry.data} 
+                  ? <LogItem
+                      key={entry.data.id}
+                      log={entry.data}
                       isExpanded={expandedLog === entry.data.id}
                       onToggle={() => onExpandedLogChange(expandedLog === entry.data.id ? null : entry.data.id)}
                     />
-                  : <CreditLogItem key={entry.data.id} log={entry.data} />
+                  : <CreditLogItem key={entry.data.id} log={entry.data} onPrint={onPrintInvoice} />
               )}
             </div>
           )}

@@ -87,8 +87,8 @@ export interface UsageLogEntry {
 
 export interface CreditLogEntry {
   id: string;
-  type: 'topup' | 'usage' | 'bonus';
-  amount: number; // positive for topup, negative for usage
+  type: 'topup' | 'usage' | 'bonus' | 'deduct' | 'admin_set' | 'admin_adjust';
+  amount: number; // positive for topup/refund, negative for usage
   balance: number; // balance after this transaction
   description: string;
   createdAt: string;

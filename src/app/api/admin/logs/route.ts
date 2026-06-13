@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
     const search = searchParams.get('search') || '';
     const period = searchParams.get('period') || '';
+    const type = searchParams.get('type') || 'all';
 
-    const result = await AdminService.getUsageLogs(page, limit, search, period);
+    const result = await AdminService.getUnifiedLogs(page, limit, search, period, type);
 
     return apiSuccess(result);
   } catch (error) {

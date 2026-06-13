@@ -32,20 +32,20 @@ export function useAdminUsers() {
     }
   }, []);
 
-  const setCredit = useCallback(async (userId: string, amount: number) => {
+  const setCredit = useCallback(async (userId: string, amount: number, description?: string) => {
     try {
       const response = await fetch('/api/admin/users', {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId, credit: amount }),
+        body: JSON.stringify({ userId, amount, description, action: 'set-credit' }),
       });
-      
+
       const result = await response.json();
       if (!response.ok || !result.success) {
         const errorMessage = result.error?.message || result.error || 'Gagal memperbarui kredit';
         throw new Error(errorMessage);
       }
-      
+
       setUserCredit(userId, amount);
       toast({ title: 'Berhasil', description: 'Kredit pengguna diperbarui' });
       return { success: true };
@@ -56,20 +56,20 @@ export function useAdminUsers() {
     }
   }, [setUserCredit, toast]);
 
-  const addCredit = useCallback(async (userId: string, amount: number) => {
+  const addCredit = useCallback(async (userId: string, amount: number, description?: string) => {
     try {
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add-credit', userId, amount }),
+        body: JSON.stringify({ action: 'add-credit', userId, amount, description }),
       });
-      
+
       const result = await response.json();
       if (!response.ok || !result.success) {
         const errorMessage = result.error?.message || result.error || 'Gagal menambahkan kredit';
         throw new Error(errorMessage);
       }
-      
+
       addUserCredit(userId, amount);
       toast({ title: 'Berhasil', description: `+$${amount.toFixed(2)} kredit ditambahkan` });
       return { success: true };

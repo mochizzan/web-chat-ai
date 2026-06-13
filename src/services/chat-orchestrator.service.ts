@@ -3,6 +3,7 @@ import { ModelRepository } from '@/repositories/model.repo';
 import { ChatPersistenceService } from './chat-persistence.service';
 import { ChatUsageTrackingService } from './chat-usage-tracking.service';
 import { ChatWebSearchService } from './chat-web-search.service';
+import { UserRepository } from '@/repositories/user.repo';
 
 const CATEGORY_PROMPTS: Record<string, string> = {
   chat: `Anda adalah asisten AI serbaguna yang cerdas, ramah, dan adaptif.
@@ -520,6 +521,31 @@ export const ChatOrchestratorService = {
                 category
               );
               await ChatUsageTrackingService.saveUsageLog(usageLog);
+
+              // Broadcast real-time log to admin (fire-and-forget)
+              import('@/services/notification.service').then(({ NotificationService }) => {
+                NotificationService.broadcast({
+                  type: 'log:new',
+                  log: {
+                    id: logId,
+                    userId,
+                    userName: '',
+                    userEmail: '',
+                    logType: 'chat',
+                    model: modelPricing.name,
+                    provider: modelPricing.provider,
+                    inputTokens: realInputTokens,
+                    outputTokens: realOutputTokens,
+                    cost: cost?.totalCost ?? 0,
+                    status: 'success',
+                    createdAt: new Date().toISOString(),
+                  },
+                }).catch(() => {
+                  // Don't fail the main chat flow if broadcast fails
+                });
+              }).catch(() => {
+                // Ignore import failure
+              });
 
               // Deduct credit
               if (cost && !modelPricing.free && cost.totalCost > 0) {

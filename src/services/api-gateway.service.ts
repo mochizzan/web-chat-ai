@@ -438,6 +438,26 @@ export const ApiGatewayService = {
       console.error('[API Gateway] Usage logging failed:', err.message);
     }
 
+    // Broadcast real-time log to admin (non-streaming)
+    import('@/services/notification.service').then(({ NotificationService }) => {
+      NotificationService.broadcast({
+        type: 'log:new',
+        log: {
+          id: usageLogId, userId, userName: '', userEmail: '',
+          logType: 'byok',
+          model: body.model,
+          provider: '',
+          inputTokens: promptTokens,
+          outputTokens: completionTokens,
+          cost: finalCost,
+          creditBefore: reservation.creditBefore,
+          creditAfter: creditAfter,
+          status: 'success',
+          createdAt: new Date().toISOString()
+        },
+      }).catch(() => {});
+    }).catch(() => {});
+
     // 9. Build OpenAI-compatible response
     const response: OpenAIChatCompletionResponse = {
       id: generateChatCompletionId(),
@@ -634,6 +654,26 @@ export const ApiGatewayService = {
       } catch (err: any) {
         console.error('[API Gateway] Usage logging failed:', err.message);
       }
+
+      // Broadcast real-time log to admin (streaming success)
+      import('@/services/notification.service').then(({ NotificationService }) => {
+        NotificationService.broadcast({
+          type: 'log:new',
+          log: {
+            id: usageLogId, userId, userName: '', userEmail: '',
+            logType: 'byok',
+            model,
+            provider: '',
+            inputTokens: promptTokens,
+            outputTokens: completionTokens,
+            cost: finalCost,
+            creditBefore: reservation.creditBefore,
+            creditAfter: creditAfter,
+            status: 'success',
+            createdAt: new Date().toISOString()
+          },
+        }).catch(() => {});
+      }).catch(() => {});
     } catch (err: any) {
       console.error('[API Gateway] Background analysis error:', err.message);
 
@@ -658,6 +698,26 @@ export const ApiGatewayService = {
       } catch {
         // Best-effort
       }
+
+      // Broadcast error log to admin (streaming error)
+      import('@/services/notification.service').then(({ NotificationService }) => {
+        NotificationService.broadcast({
+          type: 'log:new',
+          log: {
+            id: usageLogId, userId, userName: '', userEmail: '',
+            logType: 'byok',
+            model,
+            provider: '',
+            inputTokens: promptTokens,
+            outputTokens: completionTokens,
+            cost: 0,
+            creditBefore: reservation.creditBefore,
+            creditAfter: reservation.creditBefore,
+            status: 'error',
+            createdAt: new Date().toISOString()
+          },
+        }).catch(() => {});
+      }).catch(() => {});
     } finally {
       reader.releaseLock();
     }

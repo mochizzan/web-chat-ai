@@ -37,8 +37,8 @@ export const AdminService = {
     
     // If amount is positive, it's a top-up; if negative, it's a deduction.
     if (amount >= 0) {
-      console.log(`[${new Date().toISOString()}] [AdminService] adjustUserCredit: Processing top-up`, { userId, amount });
-      await BillingService.processTopup(userId, amount);
+      console.log(`[${new Date().toISOString()}] [AdminService] adjustUserCredit: Processing top-up`, { userId, amount, reason });
+      await BillingService.processTopup(userId, amount, reason);
     } else {
       console.log(`[${new Date().toISOString()}] [AdminService] adjustUserCredit: Processing deduction`, { userId, amount, reason: reason || 'Deduction by admin' });
       await BillingService.deductCredit(userId, -amount, reason || 'Deduction by admin');
@@ -88,6 +88,42 @@ export const AdminService = {
 
     console.log(`[${new Date().toISOString()}] [AdminService] getUsageLogs: Successfully retrieved usage logs`, {
       count: result.logs.length,
+      total: result.total
+    });
+
+    return {
+      ...result,
+      logs: mappedLogs,
+      page,
+      limit
+    };
+  },
+
+  /**
+   * Unified logs — combines usage_logs (chat) and api_usage_logs (BYOK).
+   */
+  async getUnifiedLogs(page: number, limit: number, search: string, period: string, type: string) {
+    console.log(`[${new Date().toISOString()}] [AdminService] getUnifiedLogs: Starting unified logs query`, { page, limit, search, period, type });
+    const result = await BillingRepository.getUnifiedAdminLogs(page, limit, search, period, type);
+
+    const mappedLogs = result.logs.map((log: any) => ({
+      id: log.id,
+      userName: log.user_name,
+      userEmail: log.user_email,
+      logType: log.log_type,
+      model: log.model,
+      provider: log.provider,
+      inputTokens: log.input_tokens,
+      outputTokens: log.output_tokens,
+      cost: log.cost,
+      creditBefore: log.credit_before,
+      creditAfter: log.credit_after,
+      status: log.status,
+      createdAt: log.created_at,
+    }));
+
+    console.log(`[${new Date().toISOString()}] [AdminService] getUnifiedLogs: Successfully retrieved`, {
+      count: mappedLogs.length,
       total: result.total
     });
 

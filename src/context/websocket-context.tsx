@@ -159,6 +159,15 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         fetchFreshModels();
         break;
       }
+      case 'log:new': {
+        // Dispatch CustomEvent so admin-logs-view can listen for real-time updates
+        try {
+          window.dispatchEvent(new CustomEvent('admin-log-new', { detail: data.log }));
+        } catch (err) {
+          console.error('[WS] Error dispatching log:new event:', err);
+        }
+        break;
+      }
       case 'ping':
         sendEvent('pong');
         break;
@@ -185,6 +194,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       ws.onopen = () => {
         console.log('[WS-Global] Connected to', wsUrl);
         setIsConnected(true);
+        window.dispatchEvent(new Event('ws-connected'));
         reconnectAttemptsRef.current = 0;
         
         // Initial sync request upon connection with userId
@@ -206,6 +216,7 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       ws.onclose = () => {
         setIsConnected(false);
+        window.dispatchEvent(new Event('ws-disconnected'));
         const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
         console.log(`[WS-Global] Disconnected, reconnecting in ${delay / 1000}s...`);
         
