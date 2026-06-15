@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useChatStore, type Message } from '@/lib/store';
+import { useUIStore, useChatDataStore, useShallow, type Message } from '@/lib/store';
 
 interface ChatContainerProps {
   children: React.ReactNode | ((state: {
@@ -21,23 +21,31 @@ interface ChatContainerProps {
 }
 
 export function ChatContainer({ children }: ChatContainerProps) {
-  const {
-    activeConversationId,
-    activeCategory,
-    messages,
-    isGenerating,
-    sidebarOpen,
-    setActiveConversationId,
-    setActiveCategory,
-    toggleSidebar,
-    resetChat,
-    setMessages,
-    editingMessageId,
-    setEditingMessageId,
-  } = useChatStore();
+  // UI selectors
+  const { isGenerating, sidebarOpen, editingMessageId, setEditingMessageId, toggleSidebar, setIsGenerating, clearStreaming } =
+    useUIStore(useShallow(s => ({
+      isGenerating: s.isGenerating,
+      sidebarOpen: s.sidebarOpen,
+      editingMessageId: s.editingMessageId,
+      setEditingMessageId: s.setEditingMessageId,
+      toggleSidebar: s.toggleSidebar,
+      setIsGenerating: s.setIsGenerating,
+      clearStreaming: s.clearStreaming,
+    })));
 
-  // Derive any needed state for the container
-  const containerState = useMemo(() => ({
+  // Data selectors
+  const { activeConversationId, activeCategory, messages, setActiveConversationId, setActiveCategory, resetChat, setMessages } =
+    useChatDataStore(useShallow(s => ({
+      activeConversationId: s.activeConversationId,
+      activeCategory: s.activeCategory,
+      messages: s.messages,
+      setActiveConversationId: s.setActiveConversationId,
+      setActiveCategory: s.setActiveCategory,
+      resetChat: s.resetChat,
+      setMessages: s.setMessages,
+    })));
+
+  const containerState = {
     activeConversationId,
     activeCategory,
     messages,
@@ -50,20 +58,7 @@ export function ChatContainer({ children }: ChatContainerProps) {
     setMessages,
     editingMessageId,
     setEditingMessageId,
-  }), [
-    activeConversationId,
-    activeCategory,
-    messages,
-    isGenerating,
-    sidebarOpen,
-    setActiveConversationId,
-    setActiveCategory,
-    toggleSidebar,
-    resetChat,
-    setMessages,
-    editingMessageId,
-    setEditingMessageId,
-  ]);
+  };
 
   // If children is a function, call it with the state; otherwise, render it directly
   if (typeof children === 'function') {

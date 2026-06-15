@@ -559,19 +559,29 @@ export const useChatDataStore = create<ChatDataState>()(
 
 type ChatState = UIState & ChatDataState;
 
+import { useShallow } from 'zustand/react/shallow';
+
 /**
- * Backward-compatible unified store hook.
- * Delegates to useUIStore + useChatDataStore under the hood.
- * Use the individual slices (useUIStore / useChatDataStore) for new code.
- */
+  * Backward-compatible unified store hook.
+  * Delegates to useUIStore + useChatDataStore under the hood.
+  * Use the individual slices (useUIStore / useChatDataStore) for new code.
+  */
 export function useChatStore(): ChatState;
 export function useChatStore<T>(selector: (state: ChatState) => T): T;
 export function useChatStore<T>(selector?: (state: ChatState) => T): ChatState | T {
-  const uiState = useUIStore();
-  const chatDataState = useChatDataStore();
+  if (!selector) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[useChatStore] Called without selector – may cause excessive re-renders. Use granular selectors.');
+    }
+    const uiState = useUIStore();
+    const chatDataState = useChatDataStore();
+    const merged: ChatState = { ...uiState, ...chatDataState };
+    return merged;
+  }
+  const uiState = useUIStore(useShallow(state => selector(state as any) as any));
+  const chatDataState = useChatDataStore(useShallow(state => selector(state as any) as any));
   const merged: ChatState = { ...uiState, ...chatDataState };
-  if (selector) return selector(merged);
-  return merged;
+  return selector(merged);
 }
 
 // Expose getState for imperative access (e.g., useChatStore.getState())

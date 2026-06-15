@@ -54,8 +54,8 @@ export const BillingRepository = {
     });
     const startTime = Date.now();
     try {
-      const sql = `SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ${Number(limit)}`;
-      const params = [userId];
+      const sql = `SELECT * FROM usage_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`;
+      const params = [userId, limit];
       
       if (conn) {
         const [rows] = await conn.execute(sql, params) as unknown as [UsageLog[]];
@@ -301,8 +301,8 @@ export const BillingRepository = {
     });
     const startTime = Date.now();
     try {
-      const sql = `SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ${Number(limit)}`;
-      const params = [userId];
+      const sql = `SELECT * FROM credit_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?`;
+      const params = [userId, limit];
       
       if (conn) {
         const [rows] = await conn.execute(sql, params) as unknown as [CreditLog[]];

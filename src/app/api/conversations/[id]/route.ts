@@ -20,6 +20,10 @@ export async function GET(
       return apiError('Conversation not found', 404, 'NOT_FOUND');
     }
 
+    if (data.conversation?.user_id !== auth.userId && auth.role !== 'admin') {
+      return apiError('Forbidden: You do not have access to this conversation', 403, 'FORBIDDEN');
+    }
+
     return apiSuccess(data, 200);
   } catch (error: unknown) {
     const err = error as Error;
@@ -39,6 +43,12 @@ export async function PATCH(
     }
 
     const { id } = await params;
+    const data = await ChatPersistenceService.getConversationDetails(id);
+    if (!data) return apiError('Conversation not found', 404, 'NOT_FOUND');
+    if (data.conversation?.user_id !== auth.userId && auth.role !== 'admin') {
+      return apiError('Forbidden: You do not have access to this conversation', 403, 'FORBIDDEN');
+    }
+
     const body = await request.json();
     const { category } = body;
 
@@ -66,6 +76,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    const data = await ChatPersistenceService.getConversationDetails(id);
+    if (!data) return apiError('Conversation not found', 404, 'NOT_FOUND');
+    if (data.conversation?.user_id !== auth.userId && auth.role !== 'admin') {
+      return apiError('Forbidden: You do not have access to this conversation', 403, 'FORBIDDEN');
+    }
+
     await ChatPersistenceService.deleteConversation(id);
     return apiSuccess({ success: true }, 200);
   } catch (error: unknown) {

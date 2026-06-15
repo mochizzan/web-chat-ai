@@ -3,6 +3,7 @@ import { verifyAuth } from '@/lib/auth';
 import { apiSuccess, apiError } from '@/lib/api-response';
 import { BillingService } from '@/services/billing.service';
 import { ApiUsageRepository } from '@/repositories/api-usage.repo';
+import { ChatRepository } from '@/repositories/chat.repo';
 import { UserNotFoundError } from '@/lib/errors';
 import type { UsageLog } from '@/types';
 import type { UsageLogSource } from '@/lib/store';

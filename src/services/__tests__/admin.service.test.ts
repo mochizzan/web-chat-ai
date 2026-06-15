@@ -72,7 +72,7 @@ describe('AdminService', () => {
 
       await AdminService.adjustUserCredit(userId, amount, reason);
 
-      expect(mockedBillingService.processTopup).toHaveBeenCalledWith(userId, amount);
+      expect(mockedBillingService.processTopup).toHaveBeenCalledWith(userId, amount, reason);
     });
 
     it('should call deductCredit for negative amount', async () => {
@@ -100,7 +100,7 @@ describe('AdminService', () => {
 
       await AdminService.adjustUserCredit(userId, amount, 'test');
 
-      expect(mockedBillingService.processTopup).toHaveBeenCalledWith(userId, 0);
+      expect(mockedBillingService.processTopup).toHaveBeenCalledWith(userId, 0, 'test');
     });
   });
 

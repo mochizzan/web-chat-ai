@@ -1,5 +1,4 @@
 services:
-  # Next.js Web Application
   web:
     build:
       context: .
@@ -27,11 +26,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
-      - ai-chat-network
+      - mariadb_net
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
@@ -55,11 +51,8 @@ services:
       - WS_PORT=3003
       - DATABASE_URL=${DATABASE_URL}
       - WS_BROADCAST_KEY=${WS_BROADCAST_KEY}
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
-      - ai-chat-network
+      - mariadb_net
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/"]
@@ -68,34 +61,6 @@ services:
       retries: 3
       start_period: 10s
 
-  # MySQL Database
-  db:
-    image: mysql:8.0
-    container_name: ai-web-chat-db
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=ServBay.dev
-      - MYSQL_DATABASE=ai_chat_web
-      - MYSQL_USER=ai_chat_user
-      - MYSQL_PASSWORD=ai_chat_password
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./init-db:/docker-entrypoint-initdb.d
-    networks:
-      - ai-chat-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pServBay.dev"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
 networks:
-  ai-chat-network:
-    driver: bridge
-
-volumes:
-  mysql-data:
-    driver: local
+  mariadb_net:
+    external: true

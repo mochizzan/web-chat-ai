@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { Bot, Brain, ChevronDown, Globe, FolderOpen } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useChatStore } from '@/lib/store';
+import { useUIStore, useChatDataStore, useShallow } from '@/lib/store';
 import { FAKE_STREAM_CONFIG } from '@/config/stream-config';
 import { HashLoader } from 'react-spinners';
 import {
@@ -446,7 +446,24 @@ function StreamingBubble({
 
 // ─── Main message list ────────────────────────────────────────
 export function MessageList({ onEditConfirm, onRegenerate }: { onEditConfirm?: (messageId: string, newContent: string) => void; onRegenerate?: () => void }) {
-  const { messages, isGenerating, setIsGenerating, isThinkingStreaming, isWebSearching, streamingContent, streamingThinkingContent, clearStreaming } = useChatStore();
+  // UI selectors
+  const { isGenerating, setIsGenerating, clearStreaming } =
+    useUIStore(useShallow(s => ({
+      isGenerating: s.isGenerating,
+      setIsGenerating: s.setIsGenerating,
+      clearStreaming: s.clearStreaming,
+    })));
+
+  // Data selectors
+  const { messages, streamingContent, streamingThinkingContent, isThinkingStreaming, isWebSearching } =
+    useChatDataStore(useShallow(s => ({
+      messages: s.messages,
+      streamingContent: s.streamingContent,
+      streamingThinkingContent: s.streamingThinkingContent,
+      isThinkingStreaming: s.isThinkingStreaming,
+      isWebSearching: s.isWebSearching,
+    })));
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
 

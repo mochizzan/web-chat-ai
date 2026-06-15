@@ -67,43 +67,40 @@ export default function Home() {
   return (
     <div ref={pageRef} className="flex h-dvh w-full overflow-hidden bg-background">
       <ChatContainer>
-        {state => {
-          const {
-            messages,
-            isGenerating,
-            sidebarOpen,
-            toggleSidebar,
-            resetChat,
-            setActiveCategory,
-          } = state;
+         {state => {
+           const {
+             messages,
+             isGenerating,
+           } = state;
 
-          // editingMessage is derived but not used directly in render, kept for potential future use
-          // const _editingMessage = editingMessageId ? messages.find((m) => m.id === editingMessageId) : null; // Removed unused variable
+   // selectors
+   const resetChat = useChatDataStore(s => s.resetChat);
+   const setActiveCategory = useChatDataStore(s => s.setActiveCategory);
+   const sidebarOpen = useUIStore(s => s.sidebarOpen);
+   const toggleSidebar = useUIStore(s => s.toggleSidebar);
 
-          // Update handleNewChat to use resetChat from state
-          const updatedHandleNewChat = () => {
-            resetChat();
-            setMobileSidebarOpen(false);
-          };
+   // stable handlers (outside render-prop)
+   const updatedHandleNewChat = useCallback(() => {
+     resetChat();
+     setMobileSidebarOpen(false);
+   }, [resetChat]);
 
-          // Update handleSelectConversation to use state setters
-          const updatedHandleSelectConversation = async (id: string) => {
-            setMobileSidebarOpen(false);
-            if (isLoadingMessages) return;
-            setIsLoadingMessages(true);
-            try {
-              await handleLoadConversation(id);
-            } finally {
-              setIsLoadingMessages(false);
-            }
-          };
+   const updatedHandleSelectConversation = useCallback(async (id: string) => {
+     setMobileSidebarOpen(false);
+     if (isLoadingMessages) return;
+     setIsLoadingMessages(true);
+     try {
+       await handleLoadConversation(id);
+     } finally {
+       setIsLoadingMessages(false);
+     }
+   }, [handleLoadConversation, isLoadingMessages]);
 
-          // Update handleQuickAction to use state setter
-          const updatedHandleQuickAction = (prompt: string, category: string) => {
-            setActiveCategory(category);
-            setInputPrompt(prompt);
-            setInputKey((prev) => prev + 1);
-          };
+   const updatedHandleQuickAction = useCallback((prompt: string, category: string) => {
+     setActiveCategory(category);
+     setInputPrompt(prompt);
+     setInputKey((prev) => prev + 1);
+   }, [setActiveCategory]);
 
           return (
             <>

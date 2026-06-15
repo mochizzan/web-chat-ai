@@ -248,14 +248,14 @@ export const ApiGatewayService = {
       clearTimeout(timeout);
     } catch (fetchErr: any) {
       // Refund reserved credit
-      await this.refundCredit(userId, reservation.creditBefore, 'OmniRouter connection failed');
+      await this.refundCredit(userId, reservation.reserved, 'OmniRouter connection failed');
       console.error('[API Gateway] OmniRouter fetch error:', fetchErr.message);
       return oaiBadGateway();
     }
 
     if (!omniResponse.ok) {
       // Refund reserved credit
-      await this.refundCredit(userId, reservation.creditBefore, `OmniRouter error: ${omniResponse.status}`);
+      await this.refundCredit(userId, reservation.reserved, `OmniRouter error: ${omniResponse.status}`);
       const errorText = await omniResponse.text().catch(() => 'unknown error');
       console.error(`[API Gateway] OmniRouter returned ${omniResponse.status}: ${errorText}`);
       return oaiBadGateway();
@@ -264,7 +264,7 @@ export const ApiGatewayService = {
     // 5. Extract the body stream and tee it
     const bodyStream = omniResponse.body;
     if (!bodyStream) {
-      await this.refundCredit(userId, reservation.creditBefore, 'No response body from OmniRouter');
+      await this.refundCredit(userId, reservation.reserved, 'No response body from OmniRouter');
       return oaiBadGateway();
     }
 
@@ -368,7 +368,7 @@ export const ApiGatewayService = {
 
       clearTimeout(timeout);
     } catch (fetchErr: any) {
-      await this.refundCredit(userId, reservation.creditBefore, 'OmniRouter connection failed');
+      await this.refundCredit(userId, reservation.reserved, 'OmniRouter connection failed');
       return oaiBadGateway();
     }
 
@@ -377,12 +377,12 @@ export const ApiGatewayService = {
     try {
       omniData = await omniResponse.json();
     } catch {
-      await this.refundCredit(userId, reservation.creditBefore, 'Failed to parse OmniRouter response');
+      await this.refundCredit(userId, reservation.reserved, 'Failed to parse OmniRouter response');
       return oaiBadGateway();
     }
 
     if (!omniResponse.ok) {
-      await this.refundCredit(userId, reservation.creditBefore, `OmniRouter error: ${omniResponse.status}`);
+      await this.refundCredit(userId, reservation.reserved, `OmniRouter error: ${omniResponse.status}`);
       return oaiBadGateway();
     }
 
@@ -401,6 +401,7 @@ export const ApiGatewayService = {
 
     // Deduct actual cost (synchronous for non-streaming)
     const finalCost = Math.min(actualCost, reservation.reserved);
+    const refundAmount = reservation.reserved - finalCost;
     let creditAfter = reservation.creditBefore - finalCost;
 
     try {
@@ -409,6 +410,14 @@ export const ApiGatewayService = {
       console.error('[API Gateway] Credit deduction failed:', err.message);
       // Still return the response, but log the error
       creditAfter = reservation.creditBefore;
+    }
+
+    if (refundAmount > 0) {
+      try {
+        await this.refundCredit(userId, refundAmount, `Reserved credit refund for ${body.model}`);
+      } catch (e) {
+        console.error('[API Gateway] Reserved credit refund failed:', e);
+      }
     }
 
     // 8. Log API usage
@@ -511,6 +520,12 @@ export const ApiGatewayService = {
         );
       }
 
+      // Deduct reserved amount atomically
+      const deducted = await BillingRepository.deductUserCredit(userId, reserved, conn);
+      if (!deducted) {
+        throw new Error('INSUFFICIENT_CREDITS: Kredit tidak cukup untuk reservasi');
+      }
+
       return { reserved, creditBefore: balance };
     });
   },
@@ -518,15 +533,14 @@ export const ApiGatewayService = {
   /**
    * Refund reserved credit (rollback on error).
    */
-  async refundCredit(userId: string, creditBefore: number, reason: string): Promise<void> {
+  async refundCredit(userId: string, amount: number, reason: string): Promise<void> {
+    if (amount <= 0) return;
+
     try {
-      const { BillingService } = await import('@/services/billing.service');
-      // We just update the credit back to what it was before the reservation
-      // Since we didn't actually deduct yet (just reserved), no action needed
-      // Log the refund event for auditing
-      console.log(`[API Gateway] Credit refunded (no-op) for ${userId}: ${reason}`);
-    } catch {
-      // Best-effort
+      await BillingRepository.updateUserCredit(userId, amount);
+      console.log(`[API Gateway] Credit refunded: +${amount} for ${userId}: ${reason}`);
+    } catch (err) {
+      console.error('[API Gateway] Credit refund failed:', err);
     }
   },
 
@@ -620,6 +634,7 @@ export const ApiGatewayService = {
 
       // Deduct actual cost (no more than reserved)
       const finalCost = Math.min(actualCost, reservation.reserved);
+      const refundAmount = reservation.reserved - finalCost;
       const creditAfter = reservation.creditBefore - finalCost;
 
       if (finalCost > 0) {
@@ -627,6 +642,14 @@ export const ApiGatewayService = {
           await this.deductCredit(userId, finalCost, `API: ${model} (${promptTokens}/${completionTokens} tokens)`);
         } catch (err: any) {
           console.error('[API Gateway] Background credit deduction failed:', err.message);
+        }
+      }
+
+      if (refundAmount > 0) {
+        try {
+          await this.refundCredit(userId, refundAmount, `Reserved credit refund for ${model}`);
+        } catch (e) {
+          console.error('[API Gateway] Background credit refund failed:', e);
         }
       }
 
@@ -680,26 +703,29 @@ export const ApiGatewayService = {
       // Log error usage
       try {
         await ApiUsageRepository.create({
-          id: usageLogId,
-          api_key_id: apiKeyId,
-          user_id: userId,
-          model,
-          stream: 1,
-          prompt_tokens: promptTokens,
-          completion_tokens: completionTokens,
-          total_tokens: totalTokens,
-          cost: 0,
-          credit_before: reservation.creditBefore,
-          credit_after: reservation.creditBefore,
-          status: 'error',
-          error_message: err.message,
-          duration_ms: Date.now() - startTime,
-        });
-      } catch {
-        // Best-effort
-      }
+        id: usageLogId,
+        api_key_id: apiKeyId,
+        user_id: userId,
+        model,
+        stream: 1,
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        total_tokens: totalTokens,
+        cost: 0,
+        credit_before: reservation.creditBefore,
+        credit_after: reservation.creditBefore,
+        status: 'error',
+        error_message: err.message,
+        duration_ms: Date.now() - startTime,
+      });
 
-      // Broadcast error log to admin (streaming error)
+      // Refund reserved credit on error
+      await this.refundCredit(userId, reservation.reserved, `Error during streaming: ${err.message}`);
+    } catch {
+      // Best-effort
+    }
+
+    // Broadcast error log to admin (streaming error)
       import('@/services/notification.service').then(({ NotificationService }) => {
         NotificationService.broadcast({
           type: 'log:new',
