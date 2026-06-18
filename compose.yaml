@@ -1,8 +1,5 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: ai-web-chat:latest
     container_name: ai-web-chat-web
     ports:
@@ -13,8 +10,8 @@ services:
       - HOSTNAME=0.0.0.0
       - WS_PORT=3003
       - DATABASE_URL=${DATABASE_URL}
-      - OMNIROUTER_BASE_URL=${OMNIROUTER_BASE_URL}
-      - OMNIROUTER_API_KEY=${OMNIROUTER_API_KEY}
+      - O‍MNIROUTER_BASE_URL=${O‍MNIROUTER_BASE_URL}
+      - O‍MNIROUTER_API_KEY=${O‍MNIROUTER_API_KEY}
       - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
       - WS_KEY=${WS_KEY}
       - WS_BROADCAST_KEY=${WS_BROADCAST_KEY}
@@ -30,7 +27,7 @@ services:
       - mariadb_net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,12 +35,9 @@ services:
 
   # WebSocket Server
   websocket:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: ai-web-chat:latest
     container_name: ai-web-chat-ws
-    command: ["sh", "-c", "pnpm ws"]
+    command: ["node", "server/websocket.js"]
     ports:
       - "3003:3003"
     environment:
@@ -55,7 +49,7 @@ services:
       - mariadb_net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/"]
+      test: ["CMD", "nc", "-z", "localhost", "3003"]
       interval: 30s
       timeout: 10s
       retries: 3
