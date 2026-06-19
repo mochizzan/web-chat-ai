@@ -3,7 +3,7 @@
 # ===========================================
 # Build Stage
 # ===========================================
-FROM node:20-alpine AS builder
+FROM node:lts-bookworm AS builder
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ RUN pnpm build
 # ===========================================
 # Production Stage
 # ===========================================
-FROM node:20-alpine AS production
+FROM node:lts-bookworm AS production
 
 WORKDIR /app
 

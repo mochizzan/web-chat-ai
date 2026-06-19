@@ -37,7 +37,7 @@ services:
   websocket:
     image: ai-web-chat:latest
     container_name: ai-web-chat-ws
-    command: ["node", "server/websocket.js"]
+    command: ["pnpm", "run", "ws"]
     ports:
       - "3003:3003"
     environment:
