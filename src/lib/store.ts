@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+export { useShallow } from 'zustand/react/shallow';
 
 // ─────────────────────────────────────────────
 // Shared Types (exported for consumers)

@@ -71,19 +71,17 @@ export default function Home() {
            const {
              messages,
              isGenerating,
+             resetChat,
+             setActiveCategory,
+             sidebarOpen,
+             toggleSidebar,
            } = state;
 
-   // selectors
-   const resetChat = useChatDataStore(s => s.resetChat);
-   const setActiveCategory = useChatDataStore(s => s.setActiveCategory);
-   const sidebarOpen = useUIStore(s => s.sidebarOpen);
-   const toggleSidebar = useUIStore(s => s.toggleSidebar);
-
-   // stable handlers (outside render-prop)
-   const updatedHandleNewChat = useCallback(() => {
-     resetChat();
-     setMobileSidebarOpen(false);
-   }, [resetChat]);
+           // stable handlers (outside render-prop)
+           const updatedHandleNewChat = useCallback(() => {
+             resetChat();
+             setMobileSidebarOpen(false);
+           }, [resetChat]);
 
    const updatedHandleSelectConversation = useCallback(async (id: string) => {
      setMobileSidebarOpen(false);
