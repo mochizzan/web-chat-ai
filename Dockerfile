@@ -36,19 +36,15 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 LABEL maintainer="ai-web-chat"
 LABEL description="AI Chat Web Application with WebSocket and MySQL"
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
 # Copy package files and install production dependencies only
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --prod
 
 # Copy built application from builder
-COPY --from=builder --chown=nodejs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
-COPY --from=builder --chown=nodejs:nodejs /app/server ./server
-COPY --from=builder --chown=nodejs:nodejs /app/src/lib ./src/lib
+COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/server ./server
+COPY --from=builder --chown=node:node /app/src/lib ./src/lib
 
 # Set environment to production
 ENV NODE_ENV=production
@@ -69,7 +65,7 @@ ENV NEXT_PUBLIC_WS_URL=wss://localhost:3003
 WORKDIR /app
 
 # Switch to non-root user
-USER nodejs
+USER node
 
 # Health check for Next.js
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
